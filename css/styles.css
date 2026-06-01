@@ -200,7 +200,19 @@ button { font-family: inherit; cursor: pointer; border: none; }
 /* ===== effetti ===== */
 .fx { position: fixed; inset: 0; pointer-events: none; z-index: 40; overflow: hidden; }
 .spark { position: absolute; font-size: 1.6rem; animation: rise 1s ease-out forwards; }
+.confetti { position: absolute; top: -12%; will-change: transform; animation: fall 2.4s linear forwards; }
 .shake { animation: shake .4s ease; }
+
+.banner {
+  font-size: 2.3rem; font-weight: 800; color: var(--violet);
+  background: var(--gold); padding: 6px 20px; border-radius: 16px;
+  box-shadow: var(--shadow); animation: pop .5s ease;
+}
+
+@keyframes fall {
+  0%   { transform: translateY(-12vh) rotate(0deg);   opacity: 1; }
+  100% { transform: translateY(115vh) rotate(540deg); opacity: 1; }
+}
 
 @keyframes float { 0%,100% { transform: translateY(0); } 50% { transform: translateY(-10px); } }
 @keyframes pop { 0% { transform: scale(0.2); opacity: 0; } 70% { transform: scale(1.1); } 100% { transform: scale(1); opacity: 1; } }

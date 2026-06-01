@@ -2,7 +2,7 @@
 (function () {
   var KEY = "mm.v1";
   var SKILL_IDS = ["subitizing", "fives", "bonds", "addition", "subtraction"];
-  var MAX_LEVEL = { subitizing: 4, fives: 3, bonds: 3, addition: 4, subtraction: 4 };
+  var MAX_LEVEL = { subitizing: 5, fives: 4, bonds: 4, addition: 5, subtraction: 5 };
   var STICKERS = ["🦄", "✨", "🌈", "⭐", "💎", "🧚", "🍄", "🌸", "🪄", "👑", "🦋", "🌟", "🐉", "🧜", "🌷", "🍀"];
 
   function blankSkill() {
@@ -105,6 +105,14 @@
     return data.collection;
   }
 
+  function addSticker() {
+    var data = load();
+    var s = STICKERS[Math.floor(Math.random() * STICKERS.length)];
+    data.collection[s] = (data.collection[s] || 0) + 1;
+    save(data);
+    return s;
+  }
+
   function reset() {
     try { localStorage.removeItem(KEY); } catch (e) {}
   }
@@ -117,6 +125,7 @@
     getSummary: getSummary,
     stars: stars,
     collection: collection,
+    addSticker: addSticker,
     reset: reset
   };
 })();

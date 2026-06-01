@@ -175,7 +175,7 @@
     var skill = MM.storage.getSkill(id);
     var level = skill.level;
     var total = game.rounds || 6;
-    var idx = 0, answered = false;
+    var idx = 0, answered = false, streak = 0;
     var results = [];
 
     ui.clear(root);
@@ -204,8 +204,13 @@
         results.push({ correct: !!correct, recall: !!opts.recall });
 
         if (correct) {
-          MM.audio.sfx("correct"); ui.sparkle(12); speak(MM.i18n.pick("praise"));
+          streak++;
+          MM.audio.sfx("correct"); ui.sparkle(16); speak(MM.i18n.pick("praise"));
+          if (streak === 3 || streak >= 5) {     // combo: festa extra
+            ui.party(40); MM.audio.sfx("cheer"); speak(MM.i18n.pick("streak"));
+          }
         } else {
+          streak = 0;
           MM.audio.sfx("wrong"); ui.shake(stage);
           var msg = MM.i18n.pick("tryAgain");
           if (opts.correctText != null) msg += " " + t("itWas", { n: opts.correctText });
@@ -229,23 +234,40 @@
 
     function endSession() {
       var info = MM.storage.recordSession(id, results);
-      reward(id, info);
+      var correctCount = results.filter(function (r) { return r.correct; }).length;
+      var perfect = results.length > 0 && correctCount === results.length;
+      var earned = [info.reward];
+      if (perfect) { earned.push(MM.storage.addSticker()); earned.push(MM.storage.addSticker()); }
+      reward(id, info, { correctCount: correctCount, total: results.length, perfect: perfect, earned: earned });
     }
 
     nextRound();
   }
 
   /* ---------- RICOMPENSA ---------- */
-  function reward(id, info) {
+  function reward(id, info, sum) {
     ui.clear(root);
-    MM.audio.sfx("win"); ui.sparkle(22);
-
     var box = ui.el("div", { class: "reward" });
-    box.appendChild(ui.el("div", { class: "big" }, ["🦄"]));
-    box.appendChild(ui.el("h2", {}, [t("sessionDone")]));
+
+    if (sum.perfect) {
+      MM.audio.sfx("party"); ui.party(90);
+      box.appendChild(ui.el("div", { class: "big" }, ["🦄"]));
+      box.appendChild(ui.el("div", { class: "banner" }, ["🌈 " + t("perfect") + " 🌈"]));
+      box.appendChild(ui.el("h2", {}, [t("allCorrect")]));
+    } else {
+      MM.audio.sfx("win"); ui.party(30);
+      box.appendChild(ui.el("div", { class: "big" }, ["🦄"]));
+      box.appendChild(ui.el("h2", {}, [t("sessionDone")]));
+    }
+
+    box.appendChild(ui.el("div", { class: "title" }, ["⭐ " + sum.correctCount + "/" + sum.total]));
     if (info.leveledUp) box.appendChild(ui.el("div", { class: "title" }, ["🎉 " + t("levelUp")]));
+
     box.appendChild(ui.el("div", {}, [t("youEarned")]));
-    box.appendChild(ui.el("div", { class: "earned" }, [info.reward]));
+    var row = ui.el("div", { class: "earned" });
+    row.style.display = "flex"; row.style.gap = "12px"; row.style.justifyContent = "center";
+    sum.earned.forEach(function (e) { row.appendChild(ui.el("span", {}, [e])); });
+    box.appendChild(row);
     box.appendChild(ui.el("div", { class: "muted", style: "color:#fff" }, [t("newFriend")]));
 
     var cont = ui.el("button", { class: "btn btn-pink" }, [t("tapContinue")]);
@@ -254,7 +276,7 @@
     box.appendChild(cont);
 
     root.appendChild(box);
-    speak(t("sessionDone") + " " + (info.leveledUp ? t("levelUp") : MM.i18n.pick("praise")));
+    speak((sum.perfect ? t("perfect") + " " + t("allCorrect") : t("sessionDone")) + (info.leveledUp ? " " + t("levelUp") : ""));
   }
 
   /* ---------- boot ---------- */

@@ -31,8 +31,13 @@
         var n = ui.randInt(5, 10), p = ui.randInt(1, n - 1);
         return { mode: "inverse", n: n, a: p, ans: n - p, max: 10, showGems: true };
       }
-      var a4 = ui.randInt(5, 20), b4 = ui.randInt(1, a4 - 1);
-      return { mode: "takeaway", a: a4, b: b4, ans: a4 - b4, max: 20, showGems: false };
+      if (level === 4) {
+        var a4 = ui.randInt(5, 20), b4 = ui.randInt(1, a4 - 1);
+        return { mode: "takeaway", a: a4, b: b4, ans: a4 - b4, max: 20, showGems: false };
+      }
+      // level 5: scavalca il 10 (es. 15 − 8), a memoria
+      var a5 = ui.randInt(12, 18), ans5 = ui.randInt(3, 9), b5 = a5 - ans5;
+      return { mode: "takeaway", a: a5, b: b5, ans: ans5, max: 20, showGems: false };
     },
 
     render: function (mount, round, api) {

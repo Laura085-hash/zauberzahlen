@@ -41,6 +41,13 @@
       tone(659, 0.12, "triangle", 0.12);
       tone(784, 0.12, "triangle", 0.24);
       tone(1047, 0.28, "triangle", 0.36);
+    } else if (name === "cheer") {        // squillo per la "combo"
+      tone(784, 0.1, "triangle", 0);
+      tone(988, 0.1, "triangle", 0.1);
+      tone(1319, 0.18, "triangle", 0.2);
+    } else if (name === "party") {        // fanfara lunga per la festa "perfetto"
+      var seq = [523, 659, 784, 1047, 880, 1047, 1319, 1568];
+      for (var p = 0; p < seq.length; p++) tone(seq[p], 0.16, "triangle", p * 0.13);
     } else if (name === "tap") {
       tone(520, 0.06, "sine", 0, 0.1);
     } else if (name === "sparkle") {

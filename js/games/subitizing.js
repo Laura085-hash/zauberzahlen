@@ -11,10 +11,10 @@
     gem: "💎",
     rounds: 6,
 
-    // level 1: 1-5 visibile · 2: 1-5 lampo · 3: 1-10 visibile · 4: 1-10 lampo
+    // 1:1-5 visibile · 2:1-5 lampo · 3:1-10 visibile · 4:1-10 lampo · 5:1-15 lampo
     makeRound: function (level) {
-      var max = level <= 2 ? 5 : 10;
-      var flash = (level === 2 || level === 4);
+      var max = level <= 2 ? 5 : (level <= 4 ? 10 : 15);
+      var flash = (level === 2 || level === 4 || level === 5);
       return { n: ui.randInt(1, max), max: max, flash: flash };
     },
 

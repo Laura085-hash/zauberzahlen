@@ -2,9 +2,10 @@
 (function () {
   var ui = MM.ui;
 
-  function tenFrame(filled, emoji, tappable, onToggle) {
-    var frame = ui.el("div", { class: "frame rows2" });
-    for (var i = 0; i < 10; i++) {
+  function tenFrame(filled, emoji, tappable, onToggle, capacity) {
+    capacity = capacity || 10;
+    var frame = ui.el("div", { class: "frame" + (capacity === 10 ? " rows2" : "") });
+    for (var i = 0; i < capacity; i++) {
       var isFilled = i < filled;
       var cell = ui.el("div", { class: "cell" + (isFilled ? " filled" : "") + (tappable ? " tappable" : "") },
         [isFilled ? emoji : ""]);
@@ -31,18 +32,19 @@
     gem: "🔮",
     rounds: 6,
 
-    // level 1: leggi 1-5 · 2: leggi 6-10 (5 + extra) · 3: costruisci il numero
+    // 1:leggi 1-5 · 2:leggi 6-10 · 3:costruisci · 4:leggi 11-20 (doppia cornice)
     makeRound: function (level) {
-      if (level === 1) return { mode: "read", n: ui.randInt(1, 5) };
-      if (level === 2) return { mode: "read", n: ui.randInt(6, 10) };
-      return { mode: "fill", n: ui.randInt(2, 10) };
+      if (level === 1) return { mode: "read", n: ui.randInt(1, 5), cap: 10 };
+      if (level === 2) return { mode: "read", n: ui.randInt(6, 10), cap: 10 };
+      if (level === 3) return { mode: "fill", n: ui.randInt(2, 10), cap: 10 };
+      return { mode: "read", n: ui.randInt(11, 20), cap: 20 };
     },
 
     render: function (mount, round, api) {
       if (round.mode === "read") {
         api.prompt(MM.i18n.t("p_whichNumber"));
-        mount.appendChild(tenFrame(round.n, api.gem, false));
-        var vals = ui.answerChoices(round.n, 3, 1, 10);
+        mount.appendChild(tenFrame(round.n, api.gem, false, null, round.cap));
+        var vals = ui.answerChoices(round.n, 3, 1, round.cap);
         mount.appendChild(ui.choices(vals, round.n, function (ok) {
           api.submit(ok, { recall: true, correctText: round.n });
         }));

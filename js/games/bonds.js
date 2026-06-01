@@ -21,7 +21,7 @@
     gem: "🍓",
     rounds: 6,
 
-    // level 1: scomponi n (5-9) con gemme visibili · 2: fai 10 · 3: scomponi 10 a memoria
+    // 1:scomponi 5-9 con gemme · 2:fai 10 · 3:scomponi 10 a memoria · 4:numeri "teen" = 10 e ? (valore posizionale)
     makeRound: function (level) {
       if (level === 1) {
         var n = ui.randInt(5, 9);
@@ -32,8 +32,12 @@
         var a2 = ui.randInt(1, 9);
         return { mode: "ten", n: 10, a: a2, b: 10 - a2, showGems: true };
       }
-      var a3 = ui.randInt(1, 9);
-      return { mode: "split", n: 10, a: a3, b: 10 - a3, showGems: false };
+      if (level === 3) {
+        var a3 = ui.randInt(1, 9);
+        return { mode: "split", n: 10, a: a3, b: 10 - a3, showGems: false };
+      }
+      var teen = ui.randInt(11, 19);
+      return { mode: "split", n: teen, a: 10, b: teen - 10, showGems: false };
     },
 
     render: function (mount, round, api) {

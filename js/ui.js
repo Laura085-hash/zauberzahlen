@@ -108,6 +108,22 @@
     }
   }
 
+  // FESTA: tanti coriandoli che cadono dall'alto
+  function party(n) {
+    var fx = document.getElementById("fx");
+    if (!fx) return;
+    var emojis = ["🎉", "🎊", "🎈", "⭐", "🌟", "✨", "🦄", "🌈", "💖", "🍭", "🪄"];
+    for (var i = 0; i < (n || 40); i++) {
+      var c = el("span", { class: "confetti" }, [emojis[Math.floor(Math.random() * emojis.length)]]);
+      c.style.left = (Math.random() * 100) + "%";
+      c.style.fontSize = (1.2 + Math.random() * 1.8) + "rem";
+      c.style.animationDuration = (1.8 + Math.random() * 1.6) + "s";
+      c.style.animationDelay = (Math.random() * 0.5) + "s";
+      fx.appendChild(c);
+      (function (node) { setTimeout(function () { if (node.parentNode) node.parentNode.removeChild(node); }, 3600); })(c);
+    }
+  }
+
   function shake(node) {
     node.classList.remove("shake");
     void node.offsetWidth; // reflow per riavviare l'animazione
@@ -118,6 +134,6 @@
   window.MM.ui = {
     el: el, clear: clear, randInt: randInt, shuffle: shuffle,
     answerChoices: answerChoices, choices: choices,
-    gems: gems, sparkle: sparkle, shake: shake
+    gems: gems, sparkle: sparkle, party: party, shake: shake
   };
 })();

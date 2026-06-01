@@ -10,8 +10,14 @@
     gem: "🌟",
     rounds: 6,
 
-    // level 1: ≤10 con gemme · 2: ≤10 a memoria · 3: ≤20 con gemme · 4: ≤20 a memoria
+    // 1:≤10 gemme · 2:≤10 memoria · 3:≤20 gemme · 4:≤20 memoria · 5:scavalca il 10 (memoria)
     makeRound: function (level) {
+      if (level === 5) {
+        var x = ui.randInt(2, 9), y = ui.randInt(2, 9), g5 = 0;
+        while (x + y <= 10 && g5++ < 60) { x = ui.randInt(2, 9); y = ui.randInt(2, 9); }
+        if (x + y <= 10) { x = 6; y = 7; }
+        return { a: x, b: y, sum: x + y, max: 20, showGems: false };
+      }
       var max = level <= 2 ? 10 : 20;
       var showGems = (level === 1 || level === 3);
       var a, b, guard = 0;

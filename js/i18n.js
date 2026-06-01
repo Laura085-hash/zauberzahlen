@@ -41,6 +41,9 @@
       praise: ["Super!", "Toll gemacht!", "Zauberhaft!", "Genau!", "Bravo!", "Wunderbar!"],
       tryAgain: ["Fast! Versuch's nochmal.", "Schau nochmal genau.", "Kein Problem, nochmal!"],
       itWas: "Es war {n}.",
+      streak: ["Super Serie!", "Wow, weiter so!", "Unglaublich!", "Du zauberst!"],
+      perfect: "PERFEKT!",
+      allCorrect: "Alles richtig!",
 
       settings: "Einstellungen",
       language: "Sprache",
@@ -109,6 +112,9 @@
       praise: ["Super!", "Well done!", "Magical!", "That's it!", "Bravo!", "Wonderful!"],
       tryAgain: ["Almost! Try again.", "Look once more.", "No worries, again!"],
       itWas: "It was {n}.",
+      streak: ["Great streak!", "Wow, keep going!", "Amazing!", "You're on fire!"],
+      perfect: "PERFECT!",
+      allCorrect: "All correct!",
 
       settings: "Settings",
       language: "Language",
