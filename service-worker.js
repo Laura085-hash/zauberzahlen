@@ -1,5 +1,7 @@
-// Service worker per uso offline. Cache "app shell" + asset statici.
-const CACHE = 'zauberzahlen-v1';
+// Service worker per uso offline + aggiornamenti automatici.
+// Strategia: NETWORK-FIRST (online = sempre l'ultima versione),
+// con fallback alla cache quando si è offline.
+const CACHE = 'zauberzahlen-v2';
 const ASSETS = [
   './',
   './index.html',
@@ -33,19 +35,19 @@ self.addEventListener('activate', (event) => {
   );
 });
 
-// Strategia: cache-first, con fallback alla rete (e aggiornamento cache).
+// Network-first: prova la rete (così online si ha sempre l'ultima versione),
+// aggiorna la cache, e se la rete manca usa la copia salvata.
 self.addEventListener('fetch', (event) => {
   if (event.request.method !== 'GET') return;
   event.respondWith(
-    caches.match(event.request).then((cached) => {
-      if (cached) return cached;
-      return fetch(event.request)
-        .then((res) => {
-          const copy = res.clone();
-          caches.open(CACHE).then((cache) => cache.put(event.request, copy)).catch(() => {});
-          return res;
-        })
-        .catch(() => cached);
-    })
+    fetch(event.request)
+      .then((res) => {
+        const copy = res.clone();
+        caches.open(CACHE).then((cache) => cache.put(event.request, copy)).catch(() => {});
+        return res;
+      })
+      .catch(() =>
+        caches.match(event.request).then((cached) => cached || caches.match('./index.html'))
+      )
   );
 });
