@@ -51,6 +51,9 @@
       on: "An",
       off: "Aus",
       close: "Schließen",
+      voice: "Stimme",
+      autoVoice: "Automatisch (beste)",
+      testVoice: "Anhören",
 
       parent: "Für Eltern",
       parentGate: "Tippe die {n}",
@@ -122,6 +125,9 @@
       on: "On",
       off: "Off",
       close: "Close",
+      voice: "Voice",
+      autoVoice: "Automatic (best)",
+      testVoice: "Listen",
 
       parent: "For parents",
       parentGate: "Tap the {n}",

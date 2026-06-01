@@ -179,6 +179,10 @@ button { font-family: inherit; cursor: pointer; border: none; }
 .seg { display: inline-flex; background: #eee; border-radius: 14px; padding: 4px; }
 .seg button { padding: 8px 16px; border-radius: 10px; background: transparent; font-weight: 800; color: #777; }
 .seg button.on { background: var(--violet); color: #fff; }
+.voice-select {
+  max-width: 56vw; padding: 10px 12px; border-radius: 12px; border: 2px solid #ddd;
+  background: #fff; font-family: inherit; font-size: .9rem; color: var(--ink);
+}
 
 /* ===== parent dashboard ===== */
 .parent { color: #fff; }

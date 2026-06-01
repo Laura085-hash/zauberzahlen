@@ -63,6 +63,38 @@
     window.speechSynthesis.onvoiceschanged = loadVoices;
   }
 
+  // dà un punteggio alle voci: preferisci quelle naturali/amichevoli, scarta le robotiche
+  function scoreVoice(v) {
+    var n = (v.name || "").toLowerCase();
+    var s = 0;
+    if (/natural|neural|enhanced|premium|wavenet/.test(n)) s += 100;
+    if (/siri/.test(n)) s += 70;
+    if (/google/.test(n)) s += 45;
+    if (/compact|eloquence|espeak|pico/.test(n)) s -= 120;   // tipicamente robotiche
+    var nice = ["samantha", "aria", "jenny", "libby", "sonia", "ava", "allison", "nicky", "zoe", "evie", // EN
+                "anna", "petra", "katja", "marlene", "vicki", "helena", "seraphina", "google deutsch"];   // DE
+    for (var i = 0; i < nice.length; i++) { if (n.indexOf(nice[i]) >= 0) { s += 30; break; } }
+    if (v.localService) s += 5;
+    return s;
+  }
+
+  function voicesFor(lang) {
+    var p = lang.slice(0, 2);
+    var c = voices.filter(function (v) { return v.lang && v.lang.toLowerCase().indexOf(p) === 0; });
+    return c.length ? c : voices;
+  }
+
+  function savedVoiceName(lang) { try { return localStorage.getItem("mm.voice_" + lang.slice(0, 2)) || ""; } catch (e) { return ""; } }
+  function setVoiceName(lang, name) { try { localStorage.setItem("mm.voice_" + lang.slice(0, 2), name || ""); } catch (e) {} }
+
+  function chooseVoice(lang) {
+    var saved = savedVoiceName(lang);
+    if (saved) { var m = voices.filter(function (v) { return v.name === saved; })[0]; if (m) return m; }
+    var c = voicesFor(lang).slice();
+    c.sort(function (a, b) { return scoreVoice(b) - scoreVoice(a); });
+    return c[0];
+  }
+
   function speak(text) {
     if (!soundOn || !text || !("speechSynthesis" in window)) return;
     try {
@@ -70,9 +102,9 @@
       var u = new SpeechSynthesisUtterance(String(text));
       var lang = MM.i18n.voiceLang();
       u.lang = lang;
-      var v = voices.filter(function (x) { return x.lang && x.lang.toLowerCase().indexOf(lang.slice(0, 2)) === 0; })[0];
-      if (v) u.voice = v;
-      u.rate = 0.95; u.pitch = 1.15;   // voce più giocosa
+      var v = chooseVoice(lang);
+      if (v) { u.voice = v; u.lang = v.lang; }
+      u.rate = 0.96; u.pitch = 1.05;   // più morbida e naturale
       window.speechSynthesis.speak(u);
     } catch (e) {}
   }
@@ -93,6 +125,10 @@
     speakNumber: speakNumber,
     setSound: setSound,
     get on() { return soundOn; },
+    // per il menù "Voce" nelle impostazioni
+    listVoices: function (lang) { return voicesFor(lang).map(function (v) { return { name: v.name, lang: v.lang }; }); },
+    getVoiceName: function (lang) { return savedVoiceName(lang); },
+    setVoiceName: setVoiceName,
     // sblocca l'audio al primo tocco (richiesto dai browser)
     unlock: function () { ac(); }
   };

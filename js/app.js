@@ -122,6 +122,30 @@
     });
     content.appendChild(ui.el("div", { class: "row" }, [ui.el("span", {}, [t("sound")]), soundSeg]));
 
+    // voce: scegli quella che piace di più, con tasto "ascolta"
+    var vlang = MM.i18n.voiceLang();
+    var vlist = MM.audio.listVoices(vlang);
+    var vcur = MM.audio.getVoiceName(vlang);
+    var sel = ui.el("select", { class: "voice-select" });
+    sel.appendChild(ui.el("option", { value: "" }, [t("autoVoice")]));
+    vlist.forEach(function (v) {
+      var o = ui.el("option", { value: v.name }, [v.name]);
+      if (v.name === vcur) o.setAttribute("selected", "selected");
+      sel.appendChild(o);
+    });
+    try { sel.value = vcur; } catch (e) {}
+    sel.addEventListener("change", function () {
+      MM.audio.setVoiceName(vlang, sel.value);
+      MM.audio.unlock(); MM.audio.speak(MM.i18n.t("hello"));
+    });
+    var testBtn = ui.el("button", { class: "icon-btn" }, ["🔊"]);
+    testBtn.style.background = "var(--violet)";
+    testBtn.addEventListener("click", function () { MM.audio.unlock(); MM.audio.speak(MM.i18n.t("hello")); });
+    var vright = ui.el("div", {}, [sel, testBtn]);
+    vright.style.display = "flex"; vright.style.gap = "8px"; vright.style.alignItems = "center";
+    vright.style.flexWrap = "wrap"; vright.style.justifyContent = "flex-end";
+    content.appendChild(ui.el("div", { class: "row" }, [ui.el("span", {}, [t("voice")]), vright]));
+
     var close = ui.el("button", { class: "btn btn-pink" }, [t("close")]);
     close.style.marginTop = "12px"; close.style.width = "100%";
     close.addEventListener("click", function () { if (back.parentNode) document.body.removeChild(back); });
