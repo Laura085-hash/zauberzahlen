@@ -1,0 +1,9 @@
+# Note personali: NON pubblicare (contiene dati personali del bambino)
+LEGGIMI.md
+
+# artefatti
+__pycache__/
+*.pyc
+*.output
+.DS_Store
+Thumbs.db
