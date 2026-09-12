@@ -51,10 +51,12 @@
       ]);
       mount.appendChild(eq);
 
-      var vals = ui.answerChoices(round.sum, 3, 0, round.max);
-      mount.appendChild(ui.choices(vals, round.sum, function (ok) {
-        api.submit(ok, { recall: !round.showGems, correctText: round.sum });
-      }));
+      var holder = ui.el("div", { class: "holder" });
+      mount.appendChild(holder);
+      var hint = MM.i18n.t(round.sum > 10 && Math.min(round.a, round.b) > 1 ? "h_plusTen" : "h_plus");
+      ui.askChoices(holder, round.sum, function () { return ui.answerChoices(round.sum, 3, 0, round.max); }, function (ok) {
+        api.submit(ok, { recall: !round.showGems, hint: hint });
+      });
     }
   };
 })();

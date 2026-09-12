@@ -224,6 +224,141 @@ button { font-family: inherit; cursor: pointer; border: none; }
 @keyframes rise { 0% { transform: translateY(0) scale(0.6); opacity: 1; } 100% { transform: translateY(-120px) scale(1.3); opacity: 0; } }
 @keyframes shake { 0%,100% { transform: translateX(0); } 20% { transform: translateX(-8px); } 40% { transform: translateX(8px); } 60% { transform: translateX(-6px); } 80% { transform: translateX(6px); } }
 
+/* ===== suggerimento dopo un errore (mai la soluzione) ===== */
+.hint {
+  background: var(--gold-soft); color: var(--ink); border-radius: 16px; padding: 10px 14px;
+  font-weight: 700; text-align: center; margin: 0 0 10px; box-shadow: var(--shadow); animation: pop .3s ease;
+}
+.hint[hidden] { display: none; }
+.progress-dots i.late { background: #f59e0b; }
+.section-label { color: #fff; font-weight: 800; font-size: 1rem; margin: 8px 0 0; opacity: .95; text-shadow: 0 2px 0 rgba(0,0,0,0.15); }
+.holder { display: flex; justify-content: center; width: 100%; }
+.holder.words .choice { width: auto; min-width: 84px; padding: 0 18px; font-size: 1.5rem; }
+.holder.tall .choice { height: auto; min-height: 84px; white-space: pre-line; line-height: 1.05; font-size: 1.05rem; padding: 8px 12px; }
+@keyframes pulse { 0%,100% { transform: scale(1); } 50% { transform: scale(1.07); } }
+
+/* ===== Zehner (barre) & Einer (punti), come nel quaderno ===== */
+.tenones {
+  display: flex; flex-direction: column; align-items: flex-start; gap: 12px;
+  background: rgba(255,255,255,0.92); border-radius: 18px; padding: 14px 18px; box-shadow: var(--shadow);
+  min-width: 200px; min-height: 80px;
+}
+.tens-col { display: flex; flex-direction: column; gap: 7px; min-height: 12px; }
+.tbar { display: block; width: 120px; height: 12px; border-radius: 6px; background: #f59e0b; animation: pop .2s ease; }
+.ones-row { display: flex; gap: 8px; min-height: 16px; flex-wrap: wrap; max-width: 260px; }
+.odot { display: block; width: 16px; height: 16px; border-radius: 50%; background: #f59e0b; animation: pop .2s ease; }
+.ones-row .odot:nth-child(6) { margin-left: 12px; }
+.tbar.mini { width: 34px; height: 8px; } .odot.mini { width: 12px; height: 12px; }
+.build-btns { display: flex; gap: 10px; flex-wrap: wrap; justify-content: center; }
+.tenones.build .tbar, .tenones.build .odot { cursor: pointer; }
+
+/* ===== Eierschachteln (bündeln) ===== */
+.eggbox { display: flex; flex-direction: column; gap: 10px; align-items: center; }
+.cartons { display: flex; flex-wrap: wrap; gap: 10px; justify-content: center; max-width: 360px; }
+.carton {
+  position: relative; display: grid; grid-template-columns: repeat(5, 1fr); gap: 2px;
+  background: #e8d5b0; border: 3px solid #b98f55; border-radius: 8px; padding: 5px 5px 4px;
+}
+.carton .egg { font-size: 1rem; line-height: 1; }
+.carton .badge {
+  position: absolute; top: -10px; right: -8px; background: var(--violet); color: #fff;
+  font-size: .7rem; font-weight: 800; border-radius: 999px; padding: 2px 6px;
+}
+.carton.pop { animation: pop .4s ease; }
+.loose { display: flex; flex-wrap: wrap; gap: 4px; justify-content: center; max-width: 320px; min-height: 1.4rem; }
+.loose .egg { font-size: 1.4rem; line-height: 1; }
+.egg.leave { animation: puff .5s ease forwards; }
+
+/* ===== Stellentafel Z|E ===== */
+.pv { display: grid; grid-template-columns: 1fr 1fr; background: #fff; border-radius: 16px; overflow: hidden; box-shadow: var(--shadow); min-width: 180px; }
+.pv .h { background: var(--violet); color: #fff; font-weight: 800; padding: 6px 10px; text-align: center; font-size: 1.1rem; display: flex; flex-direction: column; line-height: 1.1; }
+.pv .h small { font-size: .6rem; font-weight: 700; opacity: .9; }
+.pv .v { font-size: 2.2rem; font-weight: 800; text-align: center; padding: 6px 16px; color: var(--violet); min-height: 60px; }
+.pv .v:nth-child(3) { border-right: 2px solid #eee; }
+.pv .v.q { background: var(--gold); }
+
+.equation.small { font-size: 1.5rem; opacity: .9; }
+
+/* ===== Zahlenmauer ===== */
+.wall { display: flex; flex-direction: column; align-items: center; gap: 5px; }
+.wrow { display: flex; gap: 5px; }
+.brick {
+  width: 64px; height: 54px; border-radius: 10px; background: #fff; color: var(--violet);
+  font-weight: 800; font-size: 1.5rem; display: flex; align-items: center; justify-content: center; box-shadow: var(--shadow);
+}
+.brick.wide { width: 76px; }
+.brick.q { background: var(--gold-soft); border: 3px dashed var(--gold); }
+.brick.active { background: var(--gold); border-style: solid; animation: pulse 1s ease-in-out infinite; }
+.brick.ok { background: var(--good); color: #fff; border: none; animation: pop .3s ease; }
+
+/* ===== Zahlendreieck (SVG) ===== */
+.tri { width: min(84vw, 330px); height: auto; overflow: visible; }
+.tri text { font-size: 26px; font-weight: 800; fill: var(--violet); font-family: inherit; }
+.tri .slot rect { fill: #f5edff; stroke: #cdbcf0; stroke-width: 2; }
+.tri .slot.q rect { fill: var(--gold-soft); stroke: var(--gold); stroke-dasharray: 6 4; }
+.tri .slot.active rect { fill: var(--gold); stroke: var(--violet); stroke-dasharray: none; }
+.tri .slot.ok rect { fill: var(--good); stroke: none; }
+.tri .slot.ok text { fill: #fff; }
+
+/* ===== Muster (sequenze) ===== */
+.seq { display: flex; gap: 8px; flex-wrap: wrap; justify-content: center; align-items: flex-end; }
+.seq .item {
+  min-width: 54px; height: 54px; padding: 0 8px; border-radius: 14px; background: #fff; font-weight: 800; font-size: 1.5rem;
+  display: flex; align-items: center; justify-content: center; color: var(--violet); box-shadow: var(--shadow);
+}
+.seq .item.q { background: var(--gold); animation: pulse 1s ease-in-out infinite; }
+.seq .item.stack { height: auto; padding: 6px 8px; font-size: 1.1rem; line-height: 1.05; white-space: pre-line; text-align: center; }
+
+/* ===== Zahlenstrahl (SVG) ===== */
+.nline { width: min(94vw, 380px); height: auto; overflow: visible; }
+.nline .base { stroke: #fff; stroke-width: 4; stroke-linecap: round; }
+.nline .tick { stroke: #fff; stroke-width: 2; } .nline .tick.big { stroke-width: 3; }
+.nline text { fill: #fff; font-weight: 800; font-family: inherit; font-size: 13px; text-anchor: middle; }
+.nline .mark text.emo { font-size: 24px; }
+.nline .mark.dim { opacity: .3; }
+.nline .mark.tappable { cursor: pointer; }
+.nline .mark.ok circle { fill: var(--good); fill-opacity: 1; }
+
+/* ===== Hundertertafel ===== */
+.board {
+  display: grid; grid-template-columns: repeat(10, 1fr); gap: 3px; background: rgba(255,255,255,0.92);
+  padding: 8px; border-radius: 14px; box-shadow: var(--shadow); width: min(94vw, 380px);
+}
+.board .c {
+  aspect-ratio: 1; display: flex; align-items: center; justify-content: center; font-size: .78rem; font-weight: 800;
+  color: var(--violet); background: #f5edff; border-radius: 6px;
+}
+.board .c.hid { background: #e5dcf7; color: transparent; }
+.board .c.q { background: var(--gold); color: var(--violet); font-size: 1rem; animation: pulse 1s ease-in-out infinite; }
+.board .c.ok { background: var(--good); color: #fff; }
+
+/* ===== Nachbarzahlen ===== */
+.trio { display: flex; align-items: center; gap: 8px; }
+.trio .box {
+  width: 80px; height: 70px; border-radius: 16px; background: #fff; display: flex; align-items: center; justify-content: center;
+  font-size: 2rem; font-weight: 800; color: var(--violet); box-shadow: var(--shadow);
+}
+.trio .box.q { background: var(--gold-soft); border: 3px dashed var(--gold); }
+.trio .box.active { background: var(--gold); border-style: solid; animation: pulse 1s ease-in-out infinite; }
+.trio .box.ok { background: var(--good); color: #fff; border: none; }
+.trio .op { color: #fff; font-size: 1.8rem; font-weight: 800; min-width: 12px; text-align: center; }
+
+/* ===== Diktat ===== */
+.gapword { display: flex; align-items: center; gap: 2px; font-size: 2.1rem; font-weight: 800; color: #fff; letter-spacing: 1px; flex-wrap: wrap; justify-content: center; }
+.gapword .gap { background: var(--gold); color: var(--violet); border-radius: 12px; padding: 0 14px; min-width: 44px; text-align: center; }
+.typebox { display: flex; flex-direction: column; gap: 10px; align-items: center; width: 100%; }
+.typein {
+  width: min(92vw, 420px); font-family: inherit; font-size: 1.6rem; font-weight: 800; padding: 12px 14px;
+  border-radius: 16px; border: 3px solid #fff; background: #fff; color: var(--violet); text-align: center; outline: none;
+  -webkit-user-select: text; user-select: text;
+}
+.typein.wide { font-size: 1.15rem; text-align: left; }
+.typein:focus { border-color: var(--gold); }
+.diff { font-size: 1.6rem; font-weight: 800; color: #fff; background: rgba(255,255,255,0.18); padding: 8px 14px; border-radius: 14px; letter-spacing: 1px; }
+.diff .bad { color: #ffb4b4; text-decoration: underline wavy #ff6b6b; }
+.sentence { color: #fff; font-size: 1.25rem; font-weight: 700; text-align: center; background: rgba(255,255,255,0.16); padding: 10px 14px; border-radius: 14px; line-height: 1.6; }
+.sentence .blank { display: inline-block; min-width: 80px; border-bottom: 3px solid var(--gold); }
+
 @media (prefers-reduced-motion: reduce) {
   *, *::before, *::after { animation: none !important; }
 }

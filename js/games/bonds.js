@@ -53,10 +53,12 @@
         mount.appendChild(row);
       }
 
-      var vals = ui.answerChoices(round.b, 3, 0, round.n);
-      mount.appendChild(ui.choices(vals, round.b, function (ok) {
-        api.submit(ok, { recall: !round.showGems || round.mode === "ten", correctText: round.b });
-      }));
+      var holder = ui.el("div", { class: "holder" });
+      mount.appendChild(holder);
+      var hint = round.mode === "ten" ? MM.i18n.t("h_bondsTen", { a: round.a }) : MM.i18n.t("h_bonds", { a: round.a, n: round.n });
+      ui.askChoices(holder, round.b, function () { return ui.answerChoices(round.b, 3, 0, round.n); }, function (ok) {
+        api.submit(ok, { recall: !round.showGems || round.mode === "ten", hint: hint });
+      });
     }
   };
 })();

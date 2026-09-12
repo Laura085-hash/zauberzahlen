@@ -1,8 +1,10 @@
 /* ===== storage: progressi su localStorage, tutto sul dispositivo ===== */
 (function () {
   var KEY = "mm.v1";
-  var SKILL_IDS = ["subitizing", "fives", "bonds", "addition", "subtraction"];
-  var MAX_LEVEL = { subitizing: 5, fives: 4, bonds: 4, addition: 5, subtraction: 5 };
+  var SKILL_IDS = ["subitizing", "fives", "bonds", "addition", "subtraction",
+                   "tens", "hundred", "wall", "triangle", "patterns", "numberline", "neighbours", "diktat"];
+  var MAX_LEVEL = { subitizing: 5, fives: 4, bonds: 4, addition: 5, subtraction: 5,
+                    tens: 5, hundred: 5, wall: 4, triangle: 4, patterns: 5, numberline: 5, neighbours: 4, diktat: 5 };
   var STICKERS = ["🦄", "✨", "🌈", "⭐", "💎", "🧚", "🍄", "🌸", "🪄", "👑", "🦋", "🌟", "🐉", "🧜", "🌷", "🍀"];
 
   function blankSkill() {

@@ -95,16 +95,17 @@
     return c[0];
   }
 
-  function speak(text) {
+  // speak(testo [, lingua forzata es. "de-DE", velocità, accoda=true per non interrompere la frase in corso])
+  function speak(text, forceLang, rate, queue) {
     if (!soundOn || !text || !("speechSynthesis" in window)) return;
     try {
-      window.speechSynthesis.cancel();
+      if (!queue) window.speechSynthesis.cancel();
       var u = new SpeechSynthesisUtterance(String(text));
-      var lang = MM.i18n.voiceLang();
+      var lang = forceLang || MM.i18n.voiceLang();
       u.lang = lang;
       var v = chooseVoice(lang);
       if (v) { u.voice = v; u.lang = v.lang; }
-      u.rate = 0.96; u.pitch = 1.05;   // più morbida e naturale
+      u.rate = rate || 0.96; u.pitch = 1.05;   // più morbida e naturale
       window.speechSynthesis.speak(u);
     } catch (e) {}
   }

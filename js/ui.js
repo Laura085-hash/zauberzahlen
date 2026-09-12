@@ -46,7 +46,25 @@
     return shuffle(Object.keys(set).map(Number)).slice(0, count);
   }
 
-  // bottoni-numero grandi; gestisce feedback visivo, poi richiama onResult(correct:boolean)
+  // scelte da una lista di candidati "intelligenti" (trappole tipiche), completata con vicini
+  function choicesFrom(correct, cands, count, min, max) {
+    var set = {}; set[correct] = true;
+    var list = shuffle((cands || []).filter(function (v) {
+      return typeof v === "number" && !isNaN(v) && v === Math.floor(v) && v !== correct && v >= min && v <= max;
+    }));
+    for (var i = 0; i < list.length && Object.keys(set).length < count; i++) set[list[i]] = true;
+    var guard = 0;
+    while (Object.keys(set).length < count && guard++ < 200) {
+      var d = correct + randInt(-3, 3);
+      if (d >= min && d <= max && d !== correct) set[d] = true;
+    }
+    var v = min;
+    while (Object.keys(set).length < count && v <= max) { set[v] = true; v++; }
+    return shuffle(Object.keys(set).map(Number)).slice(0, count);
+  }
+
+  // bottoni-numero grandi; gestisce feedback visivo, poi richiama onResult(correct:boolean).
+  // REGOLA: se sbaglia NON si mostra la risposta giusta — deve arrivarci da sola.
   function choices(values, correct, onResult) {
     var wrap = el("div", { class: "choices" });
     var locked = false;
@@ -57,16 +75,46 @@
         MM.audio.unlock();
         var ok = (v === correct);
         b.classList.add(ok ? "correct" : "wrong");
-        if (!ok) {
-          Array.prototype.forEach.call(wrap.children, function (c) {
-            if (c.textContent === String(correct)) c.classList.add("correct");
-          });
-        }
         onResult(ok);
       });
       wrap.appendChild(b);
     });
     return wrap;
+  }
+
+  // scelte con "nuovo tentativo": dopo un errore le scelte vengono rimescolate con altri
+  // distrattori (così non può andare per esclusione) finché non trova quella giusta.
+  // gen() restituisce ogni volta la lista di valori (che contiene sempre la risposta giusta).
+  function askChoices(holder, correct, gen, onAnswer) {
+    function render() {
+      clear(holder);
+      var c = choices(gen(), correct, function (ok) {
+        onAnswer(ok);
+        if (!ok) setTimeout(render, 1100);
+      });
+      holder.appendChild(c);
+      return c;
+    }
+    return render();
+  }
+
+  // rappresentazione "quaderno": barre arancioni = decine, punti = unità
+  function tensBars(tens, ones) {
+    var box = el("div", { class: "tenones" });
+    var col = el("div", { class: "tens-col" });
+    for (var i = 0; i < tens; i++) col.appendChild(el("span", { class: "tbar" }));
+    var row = el("div", { class: "ones-row" });
+    for (var j = 0; j < ones; j++) row.appendChild(el("span", { class: "odot" }));
+    box.appendChild(col); box.appendChild(row);
+    return box;
+  }
+
+  // elementi SVG (triangoli, linea dei numeri)
+  function svg(tag, attrs, text) {
+    var n = document.createElementNS("http://www.w3.org/2000/svg", tag);
+    Object.keys(attrs || {}).forEach(function (k) { n.setAttribute(k, attrs[k]); });
+    if (text != null) n.textContent = String(text);
+    return n;
   }
 
   // gruppo di gemme; structured=true => righe da 5 (come dadi / cornice)
@@ -133,7 +181,7 @@
   window.MM = window.MM || {};
   window.MM.ui = {
     el: el, clear: clear, randInt: randInt, shuffle: shuffle,
-    answerChoices: answerChoices, choices: choices,
-    gems: gems, sparkle: sparkle, party: party, shake: shake
+    answerChoices: answerChoices, choicesFrom: choicesFrom, choices: choices, askChoices: askChoices,
+    gems: gems, tensBars: tensBars, svg: svg, sparkle: sparkle, party: party, shake: shake
   };
 })();

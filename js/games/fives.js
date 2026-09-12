@@ -44,10 +44,11 @@
       if (round.mode === "read") {
         api.prompt(MM.i18n.t("p_whichNumber"));
         mount.appendChild(tenFrame(round.n, api.gem, false, null, round.cap));
-        var vals = ui.answerChoices(round.n, 3, 1, round.cap);
-        mount.appendChild(ui.choices(vals, round.n, function (ok) {
-          api.submit(ok, { recall: true, correctText: round.n });
-        }));
+        var holder = ui.el("div", { class: "holder" });
+        mount.appendChild(holder);
+        ui.askChoices(holder, round.n, function () { return ui.answerChoices(round.n, 3, 1, round.cap); }, function (ok) {
+          api.submit(ok, { recall: true, hint: MM.i18n.t("h_fivesRead") });
+        });
       } else {
         api.prompt(MM.i18n.t("p_makeNumber", { n: round.n }));
         var count = 0;
@@ -60,7 +61,7 @@
           MM.audio.unlock();
           var ok = (count === round.n);
           if (!ok) ui.shake(frame);
-          api.submit(ok, { recall: false, correctText: round.n });
+          api.submit(ok, { recall: false, hint: MM.i18n.t("h_fivesFill") });
         });
         mount.appendChild(btn);
       }

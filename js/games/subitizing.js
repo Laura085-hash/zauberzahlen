@@ -30,10 +30,11 @@
       holder.appendChild(gemBox);
 
       function showChoices() {
-        var vals = ui.answerChoices(round.n, 3, 1, round.max);
-        mount.appendChild(ui.choices(vals, round.n, function (ok) {
-          api.submit(ok, { recall: round.flash, correctText: round.n });
-        }));
+        var holder = ui.el("div", { class: "holder" });
+        mount.appendChild(holder);
+        ui.askChoices(holder, round.n, function () { return ui.answerChoices(round.n, 3, 1, round.max); }, function (ok) {
+          api.submit(ok, { recall: round.flash, hint: MM.i18n.t("h_subitizing") });
+        });
       }
 
       if (round.flash) {

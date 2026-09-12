@@ -53,10 +53,11 @@
         mount.appendChild(eqLine);
 
         function choicesNow() {
-          var vals = ui2.answerChoices(round.ans, 3, 0, round.max);
-          mount.appendChild(ui2.choices(vals, round.ans, function (ok) {
-            api.submit(ok, { recall: !round.showGems, correctText: round.ans });
-          }));
+          var holder = ui2.el("div", { class: "holder" });
+          mount.appendChild(holder);
+          ui2.askChoices(holder, round.ans, function () { return ui2.answerChoices(round.ans, 3, 0, round.max); }, function (ok) {
+            api.submit(ok, { recall: !round.showGems, hint: MM.i18n.t("h_minus", { a: round.a }) });
+          });
         }
 
         if (round.showGems) {
@@ -83,10 +84,11 @@
           tower(round.y, "⬜", String(round.y))
         ]);
         mount.appendChild(towers);
-        var vals2 = ui2.answerChoices(round.ans, 3, 0, round.max);
-        mount.appendChild(ui2.choices(vals2, round.ans, function (ok) {
-          api.submit(ok, { recall: false, correctText: round.ans });
-        }));
+        var holder2 = ui2.el("div", { class: "holder" });
+        mount.appendChild(holder2);
+        ui2.askChoices(holder2, round.ans, function () { return ui2.answerChoices(round.ans, 3, 0, round.max); }, function (ok) {
+          api.submit(ok, { recall: false, hint: MM.i18n.t("h_diff", { x: round.x, y: round.y }) });
+        });
 
       } else { // inverse:  a + ? = n
         api.prompt(MM.i18n.t("p_inverse", { a: round.a, n: round.n }));
@@ -105,10 +107,11 @@
           ui2.el("span", {}, [String(round.n)])
         ]);
         mount.appendChild(eq);
-        var vals3 = ui2.answerChoices(round.ans, 3, 0, round.n);
-        mount.appendChild(ui2.choices(vals3, round.ans, function (ok) {
-          api.submit(ok, { recall: true, correctText: round.ans });
-        }));
+        var holder3 = ui2.el("div", { class: "holder" });
+        mount.appendChild(holder3);
+        ui2.askChoices(holder3, round.ans, function () { return ui2.answerChoices(round.ans, 3, 0, round.n); }, function (ok) {
+          api.submit(ok, { recall: true, hint: MM.i18n.t("h_inverse", { a: round.a, n: round.n }) });
+        });
       }
     }
   };

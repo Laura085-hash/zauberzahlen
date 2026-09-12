@@ -2,7 +2,12 @@
 (function () {
   var ui = MM.ui, t = function (k, v) { return MM.i18n.t(k, v); };
   var root = document.getElementById("app");
-  var GAME_ORDER = ["subitizing", "fives", "bonds", "addition", "subtraction"];
+  // sezioni della home: fino a 20 (1ª classe) · fino a 100 (2ª classe, quiz) · tedesco (Diktat)
+  var GAME_GROUPS = [
+    { key: "sec20",  ids: ["subitizing", "fives", "bonds", "addition", "subtraction"] },
+    { key: "sec100", ids: ["tens", "hundred", "neighbours", "numberline", "patterns", "wall", "triangle"] },
+    { key: "secDe",  ids: ["diktat"] }
+  ];
 
   function speak(text) { MM.audio.speak(text); }
 
@@ -52,23 +57,27 @@
     }
     root.appendChild(collection);
 
-    // carte gioco
+    // carte gioco, a sezioni
     var games = ui.el("div", { class: "games" });
-    GAME_ORDER.forEach(function (id) {
-      var g = MM.games[id];
-      var st = MM.storage.stars(id);
-      var starStr = "";
-      for (var i = 0; i < st.max; i++) starStr += (i < st.level ? "⭐" : "☆");
-      var card = ui.el("button", { class: "game-card" }, [
-        ui.el("div", { class: "emoji" }, [g.emoji]),
-        ui.el("div", { class: "grow" }, [
-          ui.el("div", { class: "name" }, [t(g.nameKey)]),
-          ui.el("div", { class: "sub" }, [t(g.subKey)]),
-          ui.el("div", { class: "stars" }, [starStr])
-        ])
-      ]);
-      card.addEventListener("click", function () { MM.audio.unlock(); MM.audio.sfx("tap"); runSession(id); });
-      games.appendChild(card);
+    GAME_GROUPS.forEach(function (grp) {
+      games.appendChild(ui.el("div", { class: "section-label" }, [t(grp.key)]));
+      grp.ids.forEach(function (id) {
+        var g = MM.games[id];
+        if (!g) return;
+        var st = MM.storage.stars(id);
+        var starStr = "";
+        for (var i = 0; i < st.max; i++) starStr += (i < st.level ? "⭐" : "☆");
+        var card = ui.el("button", { class: "game-card" }, [
+          ui.el("div", { class: "emoji" }, [g.emoji]),
+          ui.el("div", { class: "grow" }, [
+            ui.el("div", { class: "name" }, [t(g.nameKey)]),
+            ui.el("div", { class: "sub" }, [t(g.subKey)]),
+            ui.el("div", { class: "stars" }, [starStr])
+          ])
+        ]);
+        card.addEventListener("click", function () { MM.audio.unlock(); MM.audio.sfx("tap"); runSession(id); });
+        games.appendChild(card);
+      });
     });
     root.appendChild(games);
 
@@ -194,12 +203,12 @@
   }
 
   /* ---------- SESSIONE DI GIOCO ---------- */
-  function runSession(id) {
+  function runSession(id, levelOverride) {
     var game = MM.games[id];
     var skill = MM.storage.getSkill(id);
-    var level = skill.level;
+    var level = levelOverride || skill.level;
     var total = game.rounds || 6;
-    var idx = 0, answered = false, streak = 0;
+    var idx = 0, answered = false, streak = 0, wrongs = 0;
     var results = [];
 
     ui.clear(root);
@@ -212,46 +221,68 @@
 
     var screen = ui.el("div", { class: "game-screen" });
     var promptEl = ui.el("div", { class: "prompt" });
+    var hintEl = ui.el("div", { class: "hint" });
+    hintEl.hidden = true;
     var stage = ui.el("div", { class: "stage" });
     screen.appendChild(promptEl);
+    screen.appendChild(hintEl);
     screen.appendChild(stage);
     root.appendChild(screen);
 
+    // REGOLA DI LAURA: se sbaglia non si mostra MAI la risposta giusta. Riceve una
+    // spiegazione (hint) che l'aiuta a ragionare e riprova finché ci arriva da sola.
+    // Per le statistiche conta "giusta" solo se al primo tentativo.
     var api = {
       level: level,
       gem: game.gem || "💎",
-      prompt: function (text) { promptEl.textContent = text; speak(text); },
+      get attempts() { return wrongs; },
+      prompt: function (text, quiet) {
+        promptEl.textContent = text;
+        hintEl.hidden = true; hintEl.textContent = "";
+        if (!quiet) speak(text);
+      },
       submit: function (correct, opts) {
         if (answered) return;
-        answered = true;
         opts = opts || {};
-        results.push({ correct: !!correct, recall: !!opts.recall });
 
         if (correct) {
-          streak++;
-          MM.audio.sfx("correct"); ui.sparkle(16); speak(MM.i18n.pick("praise"));
-          if (streak === 3 || streak >= 5) {     // combo: festa extra
-            ui.party(40); MM.audio.sfx("cheer"); speak(MM.i18n.pick("streak"));
+          answered = true;
+          var firstTry = (wrongs === 0);
+          results.push({ correct: firstTry, recall: !!opts.recall && firstTry });
+          hintEl.hidden = true;
+          if (firstTry) {
+            streak++;
+            MM.audio.sfx("correct"); ui.sparkle(16); speak(MM.i18n.pick("praise"));
+            if (streak === 3 || streak >= 5) {     // combo: festa extra
+              ui.party(40); MM.audio.sfx("cheer"); speak(MM.i18n.pick("streak"));
+            }
+          } else {
+            streak = 0;
+            MM.audio.sfx("correct"); ui.sparkle(10); speak(MM.i18n.pick("gotIt"));
           }
+          if (dots.children[idx]) dots.children[idx].classList.add(firstTry ? "on" : "late");
+          idx++;
+          setTimeout(nextRound, 1000);
         } else {
+          wrongs++;
           streak = 0;
           MM.audio.sfx("wrong"); ui.shake(stage);
           var msg = MM.i18n.pick("tryAgain");
-          if (opts.correctText != null) msg += " " + t("itWas", { n: opts.correctText });
-          speak(msg);
+          var hint = opts.hint || "";
+          hintEl.textContent = "💡 " + (hint || msg);
+          hintEl.hidden = false;
+          speak(msg + " " + hint);
+          // nessun avanzamento: il gioco resta aperto per un nuovo tentativo
         }
-        // segna il puntino
-        if (dots.children[idx]) dots.children[idx].classList.add("on");
-        idx++;
-        setTimeout(nextRound, correct ? 950 : 1600);
       }
     };
 
     function nextRound() {
       if (idx >= total) return endSession();
-      answered = false;
+      answered = false; wrongs = 0;
       ui.clear(stage);
       promptEl.textContent = "";
+      hintEl.hidden = true; hintEl.textContent = "";
       var round = game.makeRound(level);
       game.render(stage, round, api);
     }
@@ -313,5 +344,8 @@
     window.removeEventListener("pointerdown", once);
   }, { once: true });
 
-  home();
+  // avvio diretto di un gioco (per prove): index.html#play=tens&level=3
+  var direct = /play=(\w+)(?:&level=(\d+))?/.exec((typeof location !== "undefined" && location.hash) || "");
+  if (direct && MM.games[direct[1]]) runSession(direct[1], direct[2] ? parseInt(direct[2], 10) : undefined);
+  else home();
 })();
