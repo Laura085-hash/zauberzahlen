@@ -1,6 +1,7 @@
 /* Test automatico: DOM finto in Node, gioca tutte le sessioni di tutti i giochi a tutti i livelli.
    Verifica: nessun crash, ogni sessione arriva alla ricompensa, dopo un errore NON viene mai
-   rivelata la risposta (nessun .choice.correct), compare un suggerimento e non si avanza.
+   rivelata la risposta (nessun .choice.correct, il tastierino non mostra il numero giusto),
+   compare un suggerimento e non si avanza.
    Uso:  node tests/run.js */
 "use strict";
 var fs = require("fs"), path = require("path"), assert = require("assert");
@@ -103,11 +104,21 @@ function flush() {
 ["js/i18n.js", "js/storage.js", "js/audio.js", "js/ui.js",
  "js/games/subitizing.js", "js/games/fives.js", "js/games/bonds.js", "js/games/addition.js", "js/games/subtraction.js",
  "js/games/tens.js", "js/games/hundred.js", "js/games/neighbours.js", "js/games/numberline.js", "js/games/patterns.js",
- "js/games/wall.js", "js/games/triangle.js", "js/games/diktat.js", "js/parent.js", "js/app.js"
+ "js/games/wall.js", "js/games/triangle.js",
+ "js/games/plus100.js", "js/games/minus100.js", "js/games/complete.js", "js/games/double.js", "js/games/times.js", "js/games/compare.js",
+ "js/games/diktat.js", "js/games/words.js", "js/games/diktatfull.js", "js/parent.js", "js/app.js"
 ].forEach(function (f) { (new Function(fs.readFileSync(path.join(ROOT, f), "utf8")))(); });
 
 var spoken = [];
 MM.audio.speak = function (text, lang) { spoken.push({ text: String(text), lang: lang || MM.i18n.voiceLang() }); };
+MM.audio.speakSyllables = function () {};   // le sillabe non sono la parola da scrivere
+
+// ultimo round generato (per sapere cosa digitare sul tastierino)
+var lastRound = null;
+Object.keys(MM.games).forEach(function (id) {
+  var orig = MM.games[id].makeRound;
+  MM.games[id].makeRound = function () { lastRound = orig.apply(this, arguments); return lastRound; };
+});
 
 /* ---------- helper ---------- */
 function setLevel(id, level) {
@@ -120,6 +131,10 @@ function num(s) { var m = String(s).match(/\d+/); return m ? parseInt(m[0], 10) 
 function lastGerman() { for (var i = spoken.length - 1; i >= 0; i--) if (spoken[i].lang === "de-DE") return spoken[i].text; return null; }
 
 var stats = { wrong: 0, rounds: 0, sessions: 0 };
+var LEVELS = { subitizing: 5, fives: 4, bonds: 4, addition: 5, subtraction: 5, tens: 5, hundred: 5, wall: 4, triangle: 4,
+               patterns: 5, numberline: 5, neighbours: 4, plus100: 5, minus100: 5, complete: 5, double: 5, times: 5, compare: 5,
+               diktat: 5, words: 5, diktatfull: 5 };
+var N_GAMES = Object.keys(LEVELS).length;
 
 function expectWrongFeedback(before, where) {
   var hint = appNode.querySelector(".hint");
@@ -129,10 +144,15 @@ function expectWrongFeedback(before, where) {
   stats.wrong++;
 }
 
+function typeNumpad(np, v) {
+  String(v).split("").forEach(function (d) { np.querySelector('.np-key[data-k="' + d + '"]').click(); });
+  np.querySelector(".np-ok").click();
+}
+
 function drive(id, level) {
-  setLevel(id, level); spoken = []; timers = [];
+  setLevel(id, level); spoken = []; timers = []; lastRound = null;
   MM.app.runSession(id);
-  var where = id + " L" + level, guard = 0, lastSig = "", same = 0;
+  var where = id + " L" + level, guard = 0, lastSig = "", same = 0, lastNumpad = null;
   while (!appNode.querySelector(".reward")) {
     flush();
     if (appNode.querySelector(".reward")) break;
@@ -145,6 +165,22 @@ function drive(id, level) {
       var b = free[Math.floor(Math.random() * free.length)];
       b.click();
       if (b.classList.contains("wrong")) expectWrongFeedback(before, where);
+      continue;
+    }
+    // 1b) tastierino numerico: prima un numero sbagliato, poi quello giusto
+    var np = appNode.querySelector(".numpad");
+    if (np) {
+      var ans = lastRound.ans;
+      assert.ok(typeof ans === "number" && ans >= 1 && ans <= 100, where + ": risposta fuori range " + ans);
+      if (np !== lastNumpad) {
+        typeNumpad(np, ans === 100 ? 99 : ans + 1);
+        expectWrongFeedback(before, where);
+        assert.notStrictEqual(np.querySelector(".np-display").textContent, String(ans), where + ": il tastierino mostra la risposta");
+        lastNumpad = np;
+      } else {
+        typeNumpad(np, ans);
+        assert.strictEqual(dotsDone(), before + 1, where + ": risposta giusta non accettata: " + ans);
+      }
       continue;
     }
     // 2) scrittura (Diktat)
@@ -198,10 +234,21 @@ function drive(id, level) {
 
 /* ---------- generazione: invarianti ---------- */
 function genChecks() {
-  var lvl = { subitizing: 5, fives: 4, bonds: 4, addition: 5, subtraction: 5, tens: 5, hundred: 5, wall: 4, triangle: 4, patterns: 5, numberline: 5, neighbours: 4, diktat: 5 };
+  var lvl = LEVELS;
+  var SIGN = { "<": -1, "=": 0, ">": 1 };
   Object.keys(lvl).forEach(function (id) {
     for (var L = 1; L <= lvl[id]; L++) for (var i = 0; i < 400; i++) {
-      var r = MM.games[id].makeRound(L);
+      var r = MM.games[id].makeRound(L, i % 6);
+      if (id === "plus100" || id === "minus100" || id === "complete" || id === "double" || id === "times") {
+        assert.ok(r.ans >= 1 && r.ans <= 100 && r.ans === Math.floor(r.ans), id + " L" + L + " range " + r.ans);
+        assert.ok(r.hint && r.hint.length > 8, id + " hint");
+      }
+      if (id === "plus100") assert.strictEqual(r.a + r.b, r.ans, "plus100");
+      if (id === "minus100") assert.strictEqual(r.a - r.b, r.ans, "minus100");
+      if (id === "times") assert.strictEqual(r.a * r.b, r.ans, "times");
+      if (id === "compare") assert.strictEqual(SIGN[r.ans], Math.sign(r.l.v - r.r.v), "compare " + r.l.text + " " + r.r.text);
+      if (id === "words") { assert.ok(r.word && r.word.syl.join("") === r.word.w, "words syl " + r.word.w); if (r.mode === "sentence") assert.ok(r.sentence.indexOf(r.word.w) >= 0, "words sentence"); if (r.mode === "article") assert.ok(r.word.art, "article"); }
+      if (id === "diktatfull") assert.strictEqual(r.sentence, MM.diktat.SENTENCES[i % 6], "diktatfull order");
       assert.ok(r && typeof r === "object", id + " makeRound");
       if (id === "wall") { assert.ok(r.steps.length > 0 && r.steps.length === Object.keys(r.hidden).length, "wall steps"); assert.ok(r.rows[r.rows.length - 1][0] <= 100, "wall top"); }
       if (id === "triangle") assert.strictEqual(r.steps.length, Object.keys(r.hidden).length, "triangle steps");
@@ -222,10 +269,10 @@ function genChecks() {
 
 /* ---------- esegui ---------- */
 var t0 = Date.now();
-assert.strictEqual(appNode.querySelectorAll(".game-card").length, 13, "13 carte in home");
-assert.strictEqual(appNode.querySelectorAll(".section-label").length, 3, "3 sezioni in home");
+assert.strictEqual(appNode.querySelectorAll(".game-card").length, N_GAMES, N_GAMES + " carte in home");
+assert.strictEqual(appNode.querySelectorAll(".section-label").length, 4, "4 sezioni in home");
 genChecks();
-var LV = { subitizing: 5, fives: 4, bonds: 4, addition: 5, subtraction: 5, tens: 5, hundred: 5, wall: 4, triangle: 4, patterns: 5, numberline: 5, neighbours: 4, diktat: 5 };
+var LV = LEVELS;
 ["de", "en"].forEach(function (lang) {
   MM.i18n.setLang(lang);
   Object.keys(LV).forEach(function (id) {
@@ -233,9 +280,12 @@ var LV = { subitizing: 5, fives: 4, bonds: 4, addition: 5, subtraction: 5, tens:
   });
 });
 var summary = MM.storage.getSummary();
-assert.strictEqual(summary.length, 13, "summary 13 skill");
+assert.strictEqual(summary.length, N_GAMES, "summary " + N_GAMES + " skill");
 summary.forEach(function (s) { assert.ok(s.attempts > 0, "attempts " + s.id); });
+// statistiche per parola (Schwere Wörter): ogni parola ha registrato almeno un esito
+var ws = MM.storage.wordStats();
+assert.ok(Object.keys(ws).length >= 10, "word stats: " + Object.keys(ws).length);
 // pannello genitori
 var wrap = new Node("div"); MM.parent.render(wrap);
-assert.ok(wrap.querySelectorAll(".skill-row").length === 13, "parent rows");
+assert.ok(wrap.querySelectorAll(".skill-row").length === N_GAMES, "parent rows");
 console.log("OK — sessioni: " + stats.sessions + ", errori simulati con suggerimento: " + stats.wrong + ", " + (Date.now() - t0) + " ms");

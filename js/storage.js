@@ -2,9 +2,13 @@
 (function () {
   var KEY = "mm.v1";
   var SKILL_IDS = ["subitizing", "fives", "bonds", "addition", "subtraction",
-                   "tens", "hundred", "wall", "triangle", "patterns", "numberline", "neighbours", "diktat"];
+                   "tens", "hundred", "wall", "triangle", "patterns", "numberline", "neighbours",
+                   "plus100", "minus100", "complete", "double", "times", "compare",
+                   "diktat", "words", "diktatfull"];
   var MAX_LEVEL = { subitizing: 5, fives: 4, bonds: 4, addition: 5, subtraction: 5,
-                    tens: 5, hundred: 5, wall: 4, triangle: 4, patterns: 5, numberline: 5, neighbours: 4, diktat: 5 };
+                    tens: 5, hundred: 5, wall: 4, triangle: 4, patterns: 5, numberline: 5, neighbours: 4,
+                    plus100: 5, minus100: 5, complete: 5, double: 5, times: 5, compare: 5,
+                    diktat: 5, words: 5, diktatfull: 5 };
   var STICKERS = ["🦄", "✨", "🌈", "⭐", "💎", "🧚", "🍄", "🌸", "🪄", "👑", "🦋", "🌟", "🐉", "🧜", "🌷", "🍀"];
 
   function blankSkill() {
@@ -26,6 +30,7 @@
       if (!data.skills[id]) data.skills[id] = blankSkill();
     });
     data.collection = data.collection || {};   // emoji -> count
+    data.words = data.words || {};             // Lernwort -> { r: giuste al 1° colpo, w: sbagliate }
     return data;
   }
 
@@ -115,6 +120,16 @@
     return s;
   }
 
+  // statistiche per Lernwort: le parole sbagliate tornano più spesso (gioco "Schwere Wörter")
+  function wordStats() { return load().words; }
+  function recordWord(word, ok) {
+    var data = load();
+    var s = data.words[word] || { r: 0, w: 0 };
+    if (ok) s.r++; else s.w++;
+    data.words[word] = s;
+    save(data);
+  }
+
   function reset() {
     try { localStorage.removeItem(KEY); } catch (e) {}
   }
@@ -128,6 +143,8 @@
     stars: stars,
     collection: collection,
     addSticker: addSticker,
+    wordStats: wordStats,
+    recordWord: recordWord,
     reset: reset
   };
 })();

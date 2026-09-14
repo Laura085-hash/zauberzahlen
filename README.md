@@ -1,8 +1,10 @@
 # 🦄 Zauberzahlen · Magic Numbers
 
 Un piccolo gioco per la **1ª e 2ª elementare**: numeri fino a 20, poi fino a 100
-(decine e unità, numeri vicini, linea dei numeri, pattern, muri e triangoli di numeri)
-e le parole del dettato di tedesco. Tema unicorni & magia.
+(decine e unità, numeri vicini, linea dei numeri, pattern, muri e triangoli di numeri),
+calcolo fino a 100 con il tastierino (plus/minus con passaggio della decina, completare,
+raddoppiare/dimezzare, tabelline 2-5-10, confronti) e il dettato di tedesco
+(parole difficili da scrivere, dettato intero). Tema unicorni & magia.
 
 - 📱 Web app installabile sul telefono (PWA, "Aggiungi a schermata Home")
 - 🇩🇪🇬🇧 Bilingue **Tedesco / Inglese** (interruttore ⚙️)
@@ -28,8 +30,17 @@ e le parole del dettato di tedesco. Tema unicorni & magia.
 | 🎨 Pattern Magic | pattern di forme, sequenze +1/+2/+5/+10, scale che crescono |
 | 🧱 Number Wall | piramidi: due mattoni fanno quello sopra (anche con le decine) |
 | 🔺 Number Triangle | dentro + dentro = fuori |
+| **Rechnen bis 100** (tastierino: niente scelte, il numero lo scrive lei) | |
+| ➕ Plus to 100 | 34+5 · 34+20 · 38+5 (passaggio della decina) · 34+25 · 38+27 |
+| ➖ Minus to 100 | 37−4 · 57−20 · 43−5 (passaggio della decina) · 57−23 · 52−27 |
+| 🎯 Make the Number | 34+?=40 · 60+?=100 · 63+?=100 · ?+25=60 · 100−?=37 |
+| 🪞 Double & Half | il doppio (specchio, poi a memoria, anche 24+24) e la metà (anche 30→15) |
+| ✖️ Times Magic | gruppi uguali: tabelline del 2, 5, 10 (poi 3 e 4), prima con le figure |
+| ⚖️ Compare | <, =, > tra numeri (trappola 47/74) e tra calcoli (30+5 ○ 36, 20+9 ○ 9+20) |
 | **Deutsch** | |
 | 📝 Diktat | parole del dettato: riconoscere, completare, scrivere (parola, frase con buco, frase intera) |
+| ✍️ Tricky Words | scrivere le parole: guarda-memorizza-scrivi, sillabe, solo ascolto, nel contesto, con l'articolo. Le parole difficili e quelle sbagliate tornano più spesso |
+| 📖 Whole Dictation | tutte e 6 le frasi in ordine: copia → memorizza → un tratto per parola → dettato → velocità normale. Contano anche maiuscola e punto |
 
 C'è anche una schermata **genitore** (dietro un mini-cancello) con i progressi e un riepilogo stampabile.
 

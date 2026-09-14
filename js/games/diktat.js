@@ -8,20 +8,20 @@
   var ui = MM.ui, t = function (k, v) { return MM.i18n.t(k, v); };
   var DE = "de-DE";
 
-  // gaps: [inizio, lunghezza, [giusto, sbagliato, sbagliato…]]
+  // gaps: [inizio, lunghezza, [giusto, sbagliato, sbagliato…]] · syl: sillabe (voce) · art: articolo · hard: difficoltà 1–5
   var WORDS = [
-    { w: "Bruder", noun: true,  gaps: [[0, 1, ["B", "b", "P"]], [3, 1, ["d", "t", "dd"]]] },
-    { w: "Wald", noun: true,  gaps: [[3, 1, ["d", "t", "dt"]], [0, 1, ["W", "V", "w"]]] },
-    { w: "Sonne", noun: true,  gaps: [[2, 2, ["nn", "n", "hn"]], [0, 1, ["S", "s", "Z"]]] },
-    { w: "Vögel", noun: true,  gaps: [[0, 1, ["V", "F", "W"]], [1, 1, ["ö", "o", "e"]]] },
-    { w: "Bach", noun: true,  gaps: [[2, 2, ["ch", "g", "k"]], [0, 1, ["B", "b", "P"]]] },
-    { w: "Eichhörnchen", noun: true,  gaps: [[0, 2, ["Ei", "Ai", "Ie"]], [5, 1, ["ö", "o", "e"]], [2, 3, ["chh", "ch", "hh"]]] },
-    { w: "springt", noun: false, gaps: [[0, 2, ["sp", "schp", "sb"]], [4, 2, ["ng", "nk", "n"]]] },
-    { w: "isst", noun: false, gaps: [[1, 2, ["ss", "s", "ß"]], [0, 1, ["i", "I", "ie"]]] },
-    { w: "schnell", noun: false, gaps: [[5, 2, ["ll", "l", "hl"]], [0, 3, ["sch", "sh", "ch"]]] },
-    { w: "Apfel", noun: true,  gaps: [[1, 2, ["pf", "f", "ff"]], [0, 1, ["A", "a", "E"]]] },
-    { w: "Abend", noun: true,  gaps: [[4, 1, ["d", "t", "dt"]], [0, 1, ["A", "a", "O"]]] },
-    { w: "müde", noun: false, gaps: [[1, 1, ["ü", "u", "ie"]], [0, 1, ["m", "M", "n"]]] }
+    { w: "Bruder", noun: true,  art: "der", syl: ["Bru", "der"], hard: 2, gaps: [[0, 1, ["B", "b", "P"]], [3, 1, ["d", "t", "dd"]]] },
+    { w: "Wald", noun: true,  art: "der", syl: ["Wald"], hard: 1, gaps: [[3, 1, ["d", "t", "dt"]], [0, 1, ["W", "V", "w"]]] },
+    { w: "Sonne", noun: true,  art: "die", syl: ["Son", "ne"], hard: 2, gaps: [[2, 2, ["nn", "n", "hn"]], [0, 1, ["S", "s", "Z"]]] },
+    { w: "Vögel", noun: true,  art: "die", syl: ["Vö", "gel"], hard: 4, gaps: [[0, 1, ["V", "F", "W"]], [1, 1, ["ö", "o", "e"]]] },
+    { w: "Bach", noun: true,  art: "der", syl: ["Bach"], hard: 1, gaps: [[2, 2, ["ch", "g", "k"]], [0, 1, ["B", "b", "P"]]] },
+    { w: "Eichhörnchen", noun: true,  art: "das", syl: ["Eich", "hörn", "chen"], hard: 5, gaps: [[0, 2, ["Ei", "Ai", "Ie"]], [5, 1, ["ö", "o", "e"]], [2, 3, ["chh", "ch", "hh"]]] },
+    { w: "springt", noun: false, syl: ["springt"], hard: 4, gaps: [[0, 2, ["sp", "schp", "sb"]], [4, 2, ["ng", "nk", "n"]]] },
+    { w: "isst", noun: false, syl: ["isst"], hard: 3, gaps: [[1, 2, ["ss", "s", "ß"]], [0, 1, ["i", "I", "ie"]]] },
+    { w: "schnell", noun: false, syl: ["schnell"], hard: 4, gaps: [[5, 2, ["ll", "l", "hl"]], [0, 3, ["sch", "sh", "ch"]]] },
+    { w: "Apfel", noun: true,  art: "der", syl: ["Ap", "fel"], hard: 3, gaps: [[1, 2, ["pf", "f", "ff"]], [0, 1, ["A", "a", "E"]]] },
+    { w: "Abend", noun: true,  art: "der", syl: ["A", "bend"], hard: 2, gaps: [[4, 1, ["d", "t", "dt"]], [0, 1, ["A", "a", "O"]]] },
+    { w: "müde", noun: false, syl: ["mü", "de"], hard: 3, gaps: [[1, 1, ["ü", "u", "ie"]], [0, 1, ["m", "M", "n"]]] }
   ];
   var SENTENCES = [
     "Mia geht mit ihrem Bruder in den Wald.",
@@ -101,7 +101,9 @@
   }
 
   // campo di scrittura + bottoni; verifica con check(typed) → {ok, hint, diff}
-  function typeBox(mount, api, check, wide, recall) {
+  // hooks (opzionali): onWrong(res) / onOk(res), chiamati dopo api.submit
+  function typeBox(mount, api, check, wide, recall, hooks) {
+    hooks = hooks || {};
     var box = ui.el("div", { class: "typebox" });
     var inp = input(wide);
     var fb = ui.el("div", {});
@@ -114,6 +116,7 @@
       if (!res.ok) ui.shake(inp);
       api.submit(res.ok, { recall: recall, hint: res.hint });
       if (!res.ok) { try { inp.focus(); } catch (e) {} }
+      if (res.ok) { if (hooks.onOk) hooks.onOk(res); } else if (hooks.onWrong) hooks.onWrong(res);
     }
     btn.addEventListener("click", go);
     inp.addEventListener("keydown", function (e) { if (e.key === "Enter") { e.preventDefault(); go(); } });
@@ -121,6 +124,10 @@
     mount.appendChild(box);
     return { input: inp, button: btn };
   }
+
+  // helper condivisi con "Schwere Wörter" e "Ganzes Diktat"
+  MM.diktat = { WORDS: WORDS, SENTENCES: SENTENCES, say: say, listenBtn: listenBtn, input: input, typeBox: typeBox,
+                checkWord: checkWord, diffWord: diffWord, diffSentence: diffSentence, norm: norm, wordsIn: wordsIn };
 
   MM.games.diktat = {
     id: "diktat", nameKey: "g_diktat", subKey: "g_diktat_sub", emoji: "📝", gem: "🌲", rounds: 6,

@@ -369,3 +369,65 @@ button { font-family: inherit; cursor: pointer; border: none; }
   .panel { box-shadow: none; border: 1px solid #ccc; }
   .parent, .title { color: #000; }
 }
+
+/* ===== Rechnen bis 100: tastierino numerico (niente scelte da cui andare per esclusione) ===== */
+.numpad { display: flex; flex-direction: column; align-items: center; gap: 10px; }
+.np-display {
+  min-width: 150px; height: 64px; padding: 0 18px; border-radius: 16px; background: #fff; color: var(--violet);
+  font-size: 2.2rem; font-weight: 800; display: flex; align-items: center; justify-content: center; box-shadow: var(--shadow);
+}
+.np-display.empty { color: #cdbcf0; }
+.np-display.correct { background: var(--good); color: #fff; animation: pop .3s ease; }
+.np-display.wrong { background: #ffd2d2; color: #b33; }
+.np-keys { display: grid; grid-template-columns: repeat(3, 74px); gap: 8px; }
+.np-key {
+  height: 58px; border-radius: 16px; background: #fff; color: var(--violet);
+  font-size: 1.7rem; font-weight: 800; box-shadow: var(--shadow);
+}
+.np-key:active { transform: scale(0.93); }
+.np-key.np-del { background: #f5edff; font-size: 1.4rem; }
+.np-key.np-ok { background: var(--good); color: #fff; }
+
+/* Verdoppeln: due gruppi uguali, uno riflesso */
+.mirror { display: flex; align-items: center; gap: 12px; }
+.mirror .glass { width: 5px; height: 80px; border-radius: 3px; background: var(--sky); box-shadow: 0 0 12px var(--sky); }
+.mirror .gems { max-width: 150px; }
+.mirror .gem { font-size: 1.9rem; }
+
+/* Malnehmen: gruppi uguali */
+.groups { display: flex; flex-wrap: wrap; gap: 10px; justify-content: center; max-width: 380px; }
+.group {
+  background: rgba(255,255,255,0.92); border-radius: 14px; padding: 6px 8px; box-shadow: var(--shadow);
+  display: grid; gap: 3px; justify-content: center;
+}
+.group span { font-size: 1rem; line-height: 1; }
+
+/* Vergleichen: due lati e il segno in mezzo */
+.cmp { display: flex; align-items: center; gap: 12px; }
+.cmp .side {
+  background: #fff; border-radius: 16px; padding: 8px 16px; font-size: 1.8rem; font-weight: 800;
+  color: var(--violet); box-shadow: var(--shadow); white-space: nowrap;
+}
+.cmp .sign {
+  width: 62px; height: 62px; border-radius: 16px; background: var(--gold); color: var(--violet);
+  display: flex; align-items: center; justify-content: center; font-size: 2rem; font-weight: 800;
+  animation: pulse 1s ease-in-out infinite; flex: none;
+}
+.cmp .sign.ok { background: var(--good); color: #fff; animation: pop .3s ease; }
+.holder.ops .choice { font-size: 2.4rem; }
+
+/* ===== Schwere Wörter / Ganzes Diktat ===== */
+.merkwort {
+  font-size: 2.3rem; font-weight: 800; color: #fff; background: rgba(255,255,255,0.18);
+  padding: 10px 22px; border-radius: 16px; letter-spacing: 1px; animation: pop .3s ease;
+}
+.merkwort .s2 { color: var(--gold); }
+.showtext {
+  color: #fff; font-size: 1.3rem; font-weight: 700; text-align: center; background: rgba(255,255,255,0.16);
+  padding: 12px 16px; border-radius: 14px; line-height: 1.6; max-width: 440px;
+}
+.showtext[hidden], .typebox-wrap[hidden], .btn[hidden] { display: none; }
+.typebox-wrap { display: flex; flex-direction: column; align-items: center; gap: 12px; width: 100%; }
+.blanks { display: flex; flex-wrap: wrap; gap: 14px 12px; justify-content: center; align-items: flex-end; max-width: 420px; padding: 8px 0; }
+.blanks .wline { display: block; height: 4px; border-radius: 2px; background: var(--gold); }
+.blanks .dot { color: #fff; font-weight: 800; font-size: 1.6rem; line-height: .4; }

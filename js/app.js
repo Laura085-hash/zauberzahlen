@@ -2,11 +2,13 @@
 (function () {
   var ui = MM.ui, t = function (k, v) { return MM.i18n.t(k, v); };
   var root = document.getElementById("app");
-  // sezioni della home: fino a 20 (1ª classe) · fino a 100 (2ª classe, quiz) · tedesco (Diktat)
+  // sezioni della home: fino a 20 (1ª classe) · fino a 100 (2ª classe, quiz) ·
+  // rechnen bis 100 (più difficile: tastierino, niente scelte) · tedesco (Diktat)
   var GAME_GROUPS = [
-    { key: "sec20",  ids: ["subitizing", "fives", "bonds", "addition", "subtraction"] },
-    { key: "sec100", ids: ["tens", "hundred", "neighbours", "numberline", "patterns", "wall", "triangle"] },
-    { key: "secDe",  ids: ["diktat"] }
+    { key: "sec20",   ids: ["subitizing", "fives", "bonds", "addition", "subtraction"] },
+    { key: "sec100",  ids: ["tens", "hundred", "neighbours", "numberline", "patterns", "wall", "triangle"] },
+    { key: "secCalc", ids: ["plus100", "minus100", "complete", "double", "times", "compare"] },
+    { key: "secDe",   ids: ["diktat", "words", "diktatfull"] }
   ];
 
   function speak(text) { MM.audio.speak(text); }
@@ -235,6 +237,8 @@
     var api = {
       level: level,
       gem: game.gem || "💎",
+      total: total,
+      get round() { return idx; },
       get attempts() { return wrongs; },
       prompt: function (text, quiet) {
         promptEl.textContent = text;
@@ -283,7 +287,7 @@
       ui.clear(stage);
       promptEl.textContent = "";
       hintEl.hidden = true; hintEl.textContent = "";
-      var round = game.makeRound(level);
+      var round = game.makeRound(level, idx);   // idx: per i giochi in ordine fisso (Ganzes Diktat)
       game.render(stage, round, api);
     }
 

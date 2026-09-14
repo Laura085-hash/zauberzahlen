@@ -98,6 +98,57 @@
     return render();
   }
 
+  // equazione grande (parti: numeri/operatori, "?" = casella gialla)
+  function equation(parts, small) {
+    var e = el("div", { class: "equation" + (small ? " small" : "") });
+    parts.forEach(function (p) {
+      e.appendChild(p === "?" ? el("span", { class: "q" }, ["?"]) : el("span", {}, [String(p)]));
+    });
+    return e;
+  }
+
+  // tastierino numerico: niente scelte da cui andare per esclusione, il numero lo costruisce lei.
+  // La prima cifra non può essere 0 (Joy scriveva "06" per 6).
+  function numpad(opts) {
+    opts = opts || {};
+    var maxLen = opts.maxLen || 3, val = "", locked = false;
+    var wrap = el("div", { class: "numpad" });
+    var disp = el("div", { class: "np-display empty" }, ["?"]);
+    var keys = el("div", { class: "np-keys" });
+    function show() { disp.textContent = val || "?"; if (val) disp.classList.remove("empty"); else disp.classList.add("empty"); }
+    function key(label, cls, fn) {
+      var b = el("button", { class: "np-key" + (cls ? " " + cls : ""), "data-k": label }, [label]);
+      b.addEventListener("click", function () { if (locked) return; MM.audio.unlock(); fn(); });
+      keys.appendChild(b);
+    }
+    function digit(d) {
+      if (val.length >= maxLen || (!val && d === "0")) { shake(disp); return; }
+      val += d; MM.audio.sfx("tap"); show();
+    }
+    "123456789".split("").forEach(function (d) { key(d, "", function () { digit(d); }); });
+    key("⌫", "np-del", function () { val = val.slice(0, -1); MM.audio.sfx("tap"); show(); });
+    key("0", "", function () { digit("0"); });
+    key("✓", "np-ok", function () { if (!val) { shake(disp); return; } locked = true; opts.onSubmit(parseInt(val, 10)); });
+    wrap.appendChild(disp); wrap.appendChild(keys);
+    return {
+      el: wrap, display: disp,
+      reset: function () { val = ""; locked = false; disp.classList.remove("wrong", "correct"); show(); },
+      mark: function (ok) { disp.classList.add(ok ? "correct" : "wrong"); }
+    };
+  }
+
+  // chiedi un numero col tastierino: dopo un errore si svuota e si riprova (il suggerimento arriva da onAnswer)
+  function askNumber(holder, correct, onAnswer, opts) {
+    var np = numpad({ maxLen: (opts && opts.maxLen) || 3, onSubmit: function (v) {
+      var ok = (v === correct);
+      np.mark(ok);
+      onAnswer(ok, v);
+      if (!ok) setTimeout(np.reset, 1100);
+    } });
+    clear(holder); holder.appendChild(np.el);
+    return np;
+  }
+
   // rappresentazione "quaderno": barre arancioni = decine, punti = unità
   function tensBars(tens, ones) {
     var box = el("div", { class: "tenones" });
@@ -182,6 +233,7 @@
   window.MM.ui = {
     el: el, clear: clear, randInt: randInt, shuffle: shuffle,
     answerChoices: answerChoices, choicesFrom: choicesFrom, choices: choices, askChoices: askChoices,
+    equation: equation, numpad: numpad, askNumber: askNumber,
     gems: gems, tensBars: tensBars, svg: svg, sparkle: sparkle, party: party, shake: shake
   };
 })();

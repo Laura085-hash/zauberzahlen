@@ -113,6 +113,11 @@
   // pronuncia un numero nella lingua corrente
   function speakNumber(n) { speak(String(n)); }
 
+  // parola sillaba per sillaba (Diktat): ogni sillaba in coda, lenta, senza interrompere la frase in corso
+  function speakSyllables(syllables, lang) {
+    (syllables || []).forEach(function (s) { speak(s, lang || "de-DE", 0.7, true); });
+  }
+
   function setSound(on) {
     soundOn = !!on;
     try { localStorage.setItem(SOUND_KEY, soundOn ? "1" : "0"); } catch (e) {}
@@ -124,6 +129,7 @@
     sfx: sfx,
     speak: speak,
     speakNumber: speakNumber,
+    speakSyllables: speakSyllables,
     setSound: setSound,
     get on() { return soundOn; },
     // per il menù "Voce" nelle impostazioni
