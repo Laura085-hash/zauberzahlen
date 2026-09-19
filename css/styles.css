@@ -431,3 +431,32 @@ button { font-family: inherit; cursor: pointer; border: none; }
 .blanks { display: flex; flex-wrap: wrap; gap: 14px 12px; justify-content: center; align-items: flex-end; max-width: 420px; padding: 8px 0; }
 .blanks .wline { display: block; height: 4px; border-radius: 2px; background: var(--gold); }
 .blanks .dot { color: #fff; font-weight: 800; font-size: 1.6rem; line-height: .4; }
+
+/* ===== Immer 100: Päckchen (colonna di aufgaben legate, si risolve dall'alto in basso) ===== */
+.pack { display: flex; flex-direction: column; gap: 6px; align-items: stretch; width: min(92vw, 360px); }
+.prow {
+  display: flex; align-items: center; justify-content: center; gap: 8px; padding: 4px 10px; border-radius: 14px;
+  background: rgba(255,255,255,0.14); color: #fff; font-size: 1.35rem; font-weight: 800; border: 3px solid transparent;
+  transition: transform .08s ease;
+}
+.prow .pcell { min-width: 44px; text-align: center; }
+.prow .pcell.q { background: var(--gold-soft); color: var(--violet); border: 3px dashed var(--gold); border-radius: 10px; min-width: 56px; padding: 2px 6px; }
+.prow.active { background: rgba(255,255,255,0.28); border-color: var(--gold); }
+.prow.active .pcell.q { background: var(--gold); border-style: solid; animation: pulse 1s ease-in-out infinite; }
+.prow.ok .pcell.q { background: var(--good); color: #fff; border: 3px solid transparent; animation: pop .3s ease; }
+.prow.tappable { cursor: pointer; background: rgba(255,255,255,0.92); color: var(--violet); box-shadow: var(--shadow); }
+.prow.tappable:active { transform: scale(0.97); }
+.prow.wrong { background: #ffd2d2; color: #b33; }
+.prow .mark { width: 28px; text-align: center; font-size: 1.1rem; }
+
+/* ===== Franken-Rätsel: Tabelle (oben die Zahl, unten das Doppelte / die Hälfte) + Geschichte ===== */
+.dtable { display: grid; grid-template-columns: auto repeat(4, 1fr); gap: 6px; align-items: stretch; width: min(92vw, 400px); }
+.dtable .dhead { display: flex; align-items: center; justify-content: center; font-weight: 800; color: #fff; font-size: .9rem; padding: 0 6px; text-align: center; }
+.dtable .dcell {
+  background: #fff; color: var(--violet); border-radius: 12px; min-height: 56px; display: flex; align-items: center; justify-content: center;
+  font-size: 1.5rem; font-weight: 800; box-shadow: var(--shadow); border: 3px solid transparent;
+}
+.dtable .dcell.q { background: var(--gold-soft); border: 3px dashed var(--gold); }
+.dtable .dcell.active { background: var(--gold); border-style: solid; animation: pulse 1s ease-in-out infinite; }
+.dtable .dcell.ok { background: var(--good); color: #fff; border: 3px solid transparent; animation: pop .3s ease; }
+.story { font-size: 3rem; line-height: 1; animation: float 2.6s ease-in-out infinite; }

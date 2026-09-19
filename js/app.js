@@ -7,7 +7,7 @@
   var GAME_GROUPS = [
     { key: "sec20",   ids: ["subitizing", "fives", "bonds", "addition", "subtraction"] },
     { key: "sec100",  ids: ["tens", "hundred", "neighbours", "numberline", "patterns", "wall", "triangle"] },
-    { key: "secCalc", ids: ["plus100", "minus100", "complete", "double", "times", "compare"] },
+    { key: "secCalc", ids: ["plus100", "minus100", "complete", "always100", "double", "francs", "times", "compare"] },
     { key: "secDe",   ids: ["diktat", "words", "diktatfull"] }
   ];
 

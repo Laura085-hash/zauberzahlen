@@ -3,11 +3,11 @@
   var KEY = "mm.v1";
   var SKILL_IDS = ["subitizing", "fives", "bonds", "addition", "subtraction",
                    "tens", "hundred", "wall", "triangle", "patterns", "numberline", "neighbours",
-                   "plus100", "minus100", "complete", "double", "times", "compare",
+                   "plus100", "minus100", "complete", "always100", "double", "francs", "times", "compare",
                    "diktat", "words", "diktatfull"];
   var MAX_LEVEL = { subitizing: 5, fives: 4, bonds: 4, addition: 5, subtraction: 5,
                     tens: 5, hundred: 5, wall: 4, triangle: 4, patterns: 5, numberline: 5, neighbours: 4,
-                    plus100: 5, minus100: 5, complete: 5, double: 5, times: 5, compare: 5,
+                    plus100: 5, minus100: 5, complete: 5, always100: 5, double: 5, francs: 5, times: 5, compare: 5,
                     diktat: 5, words: 5, diktatfull: 5 };
   var STICKERS = ["🦄", "✨", "🌈", "⭐", "💎", "🧚", "🍄", "🌸", "🪄", "👑", "🦋", "🌟", "🐉", "🧜", "🌷", "🍀"];
 

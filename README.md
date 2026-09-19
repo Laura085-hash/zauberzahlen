@@ -2,8 +2,8 @@
 
 Un piccolo gioco per la **1ª e 2ª elementare**: numeri fino a 20, poi fino a 100
 (decine e unità, numeri vicini, linea dei numeri, pattern, muri e triangoli di numeri),
-calcolo fino a 100 con il tastierino (plus/minus con passaggio della decina, completare,
-raddoppiare/dimezzare, tabelline 2-5-10, confronti) e il dettato di tedesco
+calcolo fino a 100 con il tastierino (plus/minus con passaggio della decina, completare, pacchetti "sempre 100",
+raddoppiare/dimezzare anche in tabelle e problemi con i franchi, tabelline 2-5-10, confronti) e il dettato di tedesco
 (parole difficili da scrivere, dettato intero). Tema unicorni & magia.
 
 - 📱 Web app installabile sul telefono (PWA, "Aggiungi a schermata Home")
@@ -34,7 +34,9 @@ raddoppiare/dimezzare, tabelline 2-5-10, confronti) e il dettato di tedesco
 | ➕ Plus to 100 | 34+5 · 34+20 · 38+5 (passaggio della decina) · 34+25 · 38+27 |
 | ➖ Minus to 100 | 37−4 · 57−20 · 43−5 (passaggio della decina) · 57−23 · 52−27 |
 | 🎯 Make the Number | 34+?=40 · 60+?=100 · 63+?=100 · ?+25=60 · 100−?=37 |
+| 🧩 Always 100 | pacchetti di problemi legati (80+20, 60+40 … · 93+7, 83+17 … · 19+81, 29+71 …) e "la più facile prima" (28, 30, 32 → prima 30+70) |
 | 🪞 Double & Half | il doppio (specchio, poi a memoria, anche 24+24) e la metà (anche 30→15) |
+| 💰 Franc Puzzles | tabelle doppio/metà (10 11 12 13 → 20 22 24 26) e storie con i franchi ("Lia ha 25 franchi, Zora il doppio") |
 | ✖️ Times Magic | gruppi uguali: tabelline del 2, 5, 10 (poi 3 e 4), prima con le figure |
 | ⚖️ Compare | <, =, > tra numeri (trappola 47/74) e tra calcoli (30+5 ○ 36, 20+9 ○ 9+20) |
 | **Deutsch** | |

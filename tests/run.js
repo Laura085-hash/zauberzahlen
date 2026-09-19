@@ -105,7 +105,7 @@ function flush() {
  "js/games/subitizing.js", "js/games/fives.js", "js/games/bonds.js", "js/games/addition.js", "js/games/subtraction.js",
  "js/games/tens.js", "js/games/hundred.js", "js/games/neighbours.js", "js/games/numberline.js", "js/games/patterns.js",
  "js/games/wall.js", "js/games/triangle.js",
- "js/games/plus100.js", "js/games/minus100.js", "js/games/complete.js", "js/games/double.js", "js/games/times.js", "js/games/compare.js",
+ "js/games/plus100.js", "js/games/minus100.js", "js/games/complete.js", "js/games/always100.js", "js/games/double.js", "js/games/francs.js", "js/games/times.js", "js/games/compare.js",
  "js/games/diktat.js", "js/games/words.js", "js/games/diktatfull.js", "js/parent.js", "js/app.js"
 ].forEach(function (f) { (new Function(fs.readFileSync(path.join(ROOT, f), "utf8")))(); });
 
@@ -126,19 +126,21 @@ function setLevel(id, level) {
   data.skills[id] = { level: level, attempts: 0, correct: 0, recent: [], recall: { c: 0, t: 0 }, count: { c: 0, t: 0 }, sessions: 0 };
   store["mm.v1"] = JSON.stringify(data);
 }
+function solvedCells() { return appNode.querySelectorAll(".pack .prow.ok").length + appNode.querySelectorAll(".dtable .dcell.ok").length; }
 function dotsDone() { return appNode.querySelectorAll(".progress-dots i.on").length + appNode.querySelectorAll(".progress-dots i.late").length; }
 function num(s) { var m = String(s).match(/\d+/); return m ? parseInt(m[0], 10) : null; }
 function lastGerman() { for (var i = spoken.length - 1; i >= 0; i--) if (spoken[i].lang === "de-DE") return spoken[i].text; return null; }
 
 var stats = { wrong: 0, rounds: 0, sessions: 0 };
 var LEVELS = { subitizing: 5, fives: 4, bonds: 4, addition: 5, subtraction: 5, tens: 5, hundred: 5, wall: 4, triangle: 4,
-               patterns: 5, numberline: 5, neighbours: 4, plus100: 5, minus100: 5, complete: 5, double: 5, times: 5, compare: 5,
+               patterns: 5, numberline: 5, neighbours: 4, plus100: 5, minus100: 5, complete: 5, always100: 5, double: 5, francs: 5, times: 5, compare: 5,
                diktat: 5, words: 5, diktatfull: 5 };
 var N_GAMES = Object.keys(LEVELS).length;
 
 function expectWrongFeedback(before, where) {
   var hint = appNode.querySelector(".hint");
   assert.ok(hint && !hint.hidden && hint.textContent.length > 4, where + ": manca il suggerimento dopo l'errore");
+  assert.ok(hint.textContent.indexOf("{") < 0, where + ": segnaposto non sostituito nel suggerimento: " + hint.textContent);
   assert.strictEqual(appNode.querySelectorAll(".choice.correct").length, 0, where + ": RIVELATA la risposta giusta dopo un errore!");
   assert.strictEqual(dotsDone(), before, where + ": avanzato dopo un errore");
   stats.wrong++;
@@ -152,7 +154,7 @@ function typeNumpad(np, v) {
 function drive(id, level) {
   setLevel(id, level); spoken = []; timers = []; lastRound = null;
   MM.app.runSession(id);
-  var where = id + " L" + level, guard = 0, lastSig = "", same = 0, lastNumpad = null;
+  var where = id + " L" + level, guard = 0, lastSig = "", same = 0, lastNumpad = null, lastSolved = -1;
   while (!appNode.querySelector(".reward")) {
     flush();
     if (appNode.querySelector(".reward")) break;
@@ -167,19 +169,31 @@ function drive(id, level) {
       if (b.classList.contains("wrong")) expectWrongFeedback(before, where);
       continue;
     }
-    // 1b) tastierino numerico: prima un numero sbagliato, poi quello giusto
+    // 1a) righe da toccare (Immer 100: "die leichteste zuerst")
+    var prows = appNode.querySelectorAll(".prow.tappable");
+    if (prows.length) {
+      var pr = prows[Math.floor(Math.random() * prows.length)]; pr.click();
+      if (pr.classList.contains("wrong")) expectWrongFeedback(before, where);
+      else assert.ok(pr.querySelector(".mark").textContent === "⭐", where + ": riga leichte non marcata");
+      continue;
+    }
+    // 1b) tastierino numerico: prima un numero sbagliato, poi quello giusto.
+    //     Round a più passi (Päckchen, tabelle): round.answers in ordine, avanzamento = celle .ok
     var np = appNode.querySelector(".numpad");
     if (np) {
-      var ans = lastRound.ans;
+      var solved = solvedCells(), multi = !!lastRound.answers;
+      var ans = multi ? lastRound.answers[solved] : lastRound.ans;
       assert.ok(typeof ans === "number" && ans >= 1 && ans <= 100, where + ": risposta fuori range " + ans);
-      if (np !== lastNumpad) {
+      if (np !== lastNumpad || solved !== lastSolved) {
         typeNumpad(np, ans === 100 ? 99 : ans + 1);
         expectWrongFeedback(before, where);
         assert.notStrictEqual(np.querySelector(".np-display").textContent, String(ans), where + ": il tastierino mostra la risposta");
-        lastNumpad = np;
+        assert.strictEqual(solvedCells(), solved, where + ": cella avanzata dopo un errore");
+        lastNumpad = np; lastSolved = solved;
       } else {
         typeNumpad(np, ans);
-        assert.strictEqual(dotsDone(), before + 1, where + ": risposta giusta non accettata: " + ans);
+        if (multi && solved + 1 < lastRound.answers.length) assert.strictEqual(solvedCells(), solved + 1, where + ": passo giusto non accettato: " + ans);
+        else assert.strictEqual(dotsDone(), before + 1, where + ": risposta giusta non accettata: " + ans);
       }
       continue;
     }
@@ -257,6 +271,32 @@ function genChecks() {
       if (id === "numberline" && r.mode !== "board") assert.ok(r.n >= r.lo && r.n <= r.hi, "numberline range");
       if (id === "hundred") assert.ok(r.ans >= 0 && r.ans <= 100, "hundred range " + r.ans);
       if (id === "tens") assert.ok(r.n >= 0 && r.n <= 99, "tens range");
+      if (id === "always100") {
+        assert.ok(r.rows.length >= 3 && r.answers.length === r.rows.length && r.order.length === r.rows.length, "always100 rows");
+        r.rows.forEach(function (w) { assert.ok(w.a >= 0 && w.a <= 99 && w.a + w.ans === 100, "always100 " + w.a); });
+        r.answers.forEach(function (v) { assert.ok(v >= 1 && v <= 100, "always100 ans " + v); });
+        if (r.kind === "easy") { assert.strictEqual(r.rows[r.easyIdx].a % 10, 0, "always100 easy is a ten"); assert.strictEqual(r.order[0], r.easyIdx, "always100 easy first"); }
+        else if (r.pattern) { var st = r.rows[1].a - r.rows[0].a; r.rows.forEach(function (w, j) { if (j) assert.strictEqual(w.a - r.rows[j - 1].a, st, "always100 pattern"); }); }
+        if (L <= 4) r.rows.forEach(function (w) { assert.strictEqual(w.form, "plus", "always100 form"); });
+      }
+      if (id === "francs") {
+        if (r.kind === "table") {
+          assert.strictEqual(r.tops.length, r.answers.length, "francs table");
+          r.tops.forEach(function (n, j) {
+            assert.strictEqual(r.answers[j], r.mode === "double" ? 2 * n : n / 2, "francs table " + n);
+            assert.ok(r.answers[j] >= 1 && r.answers[j] <= 100 && r.answers[j] === Math.floor(r.answers[j]), "francs range " + r.answers[j]);
+            if (j) assert.strictEqual(n - r.tops[j - 1], r.step, "francs step");
+          });
+        } else {
+          assert.ok(r.ans >= 1 && r.ans <= 100 && r.ans === Math.floor(r.ans), "francs story range " + r.ans);
+          assert.ok(r.text.length > 20 && r.hint.length > 8 && r.text.indexOf("{") < 0 && r.hint.indexOf("{") < 0, "francs text " + r.text);
+          if (L === 3) assert.ok(r.form === "double" || r.form === "half", "francs L3 forms");
+          if (r.form === "double") assert.strictEqual(r.ans, 2 * r.n, "francs double");
+          if (r.form === "half" || r.form === "reverse") assert.strictEqual(r.ans, r.n / 2, "francs half");
+          if (r.form === "together") assert.strictEqual(r.ans, 3 * r.n, "francs together");
+          if (r.form === "halfTogether") assert.strictEqual(r.ans, r.n + r.n / 2, "francs halfTogether");
+        }
+      }
     }
   });
   // choicesFrom: sempre 3 valori unici con la risposta giusta dentro

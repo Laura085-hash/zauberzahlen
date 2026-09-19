@@ -1,7 +1,7 @@
 {
   "name": "Zauberzahlen · Magic Numbers",
   "short_name": "Zauberzahlen",
-  "description": "Ein magisches Lernspiel: Zahlen bis 20 und bis 100 (Zehner & Einer, Nachbarzahlen, Zahlenstrahl, Muster, Zahlenmauern), Rechnen bis 100 (Plus, Minus, Ergänzen, Verdoppeln, Malnehmen, Vergleichen) und Diktat-Lernwörter.",
+  "description": "Ein magisches Lernspiel: Zahlen bis 20 und bis 100 (Zehner & Einer, Nachbarzahlen, Zahlenstrahl, Muster, Zahlenmauern), Rechnen bis 100 (Plus, Minus, Ergänzen, Immer 100, Verdoppeln und Halbieren, Franken-Rätsel, Malnehmen, Vergleichen) und Diktat-Lernwörter.",
   "lang": "de",
   "dir": "ltr",
   "start_url": "./index.html",
