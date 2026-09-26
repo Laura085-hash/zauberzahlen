@@ -29,12 +29,25 @@
         setTimeout(function () { location.replace("./"); }, delay || 2500);
       }
       var src = (location.search || "") + " " + (location.hash || "");
+      // ?d=<base64url> con i dati dentro, oppure ?u=<url> di un file JSON (link corto: alcune barre indirizzi troncano)
       var m = /[?&#]d=([A-Za-z0-9+\/=_-]+)/.exec(src);
-      if (!m) { go("⚠️ Kein Fortschritt im Link."); return; }
+      var mu = /[?&#]u=([^&#\s]+)/.exec(src);
+      if (!m && !mu) { go("⚠️ Kein Fortschritt im Link."); return; }
+      if (mu) {
+        var u = decodeURIComponent(mu[1]);
+        msg.textContent = "⏳ Lade Fortschritt …";
+        fetch(u, { cache: "no-store" }).then(function (r) { if (!r.ok) throw new Error("HTTP " + r.status); return r.json(); })
+          .then(apply).catch(function (e) { go("⚠️ Datei nicht lesbar: " + (e && e.message)); });
+        return;
+      }
       try {
         var b64 = m[1].replace(/-/g, "+").replace(/_/g, "/");
-        var data = JSON.parse(decodeURIComponent(escape(atob(b64))));
-        if (!data || !data.skills) { go("⚠️ Link unvollständig (" + m[1].length + " Zeichen)."); return; }
+        apply(JSON.parse(decodeURIComponent(escape(atob(b64)))));
+      } catch (e) {
+        go("⚠️ Link nicht lesbar (" + m[1].length + " Zeichen): " + (e && e.message));
+      }
+      function apply(data) {
+        if (!data || !data.skills) { go("⚠️ Keine Fortschrittsdaten gefunden."); return; }
         delete data._meta;
         var here = null;
         try { here = JSON.parse(localStorage.getItem("mm.v1")); } catch (e) {}
@@ -47,8 +60,6 @@
         } else {
           go("ℹ️ Hier ist schon mehr Fortschritt gespeichert (" + a1 + " ≥ " + a2 + " Aufgaben). Nichts geändert.");
         }
-      } catch (e) {
-        go("⚠️ Link nicht lesbar (" + m[1].length + " Zeichen): " + (e && e.message));
       }
     })();
   </script>
