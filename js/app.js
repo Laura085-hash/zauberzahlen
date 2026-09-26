@@ -157,6 +157,8 @@
     vright.style.display = "flex"; vright.style.gap = "8px"; vright.style.alignItems = "center";
     vright.style.flexWrap = "wrap"; vright.style.justifyContent = "flex-end";
     content.appendChild(ui.el("div", { class: "row" }, [ui.el("span", {}, [t("voice")]), vright]));
+    // nel Browser di Samsung Kids (WebView) non c'è nessuna voce del dispositivo: lo diciamo chiaramente
+    content.appendChild(ui.el("div", { class: "muted" }, [("speechSynthesis" in window) ? t("voiceDevice") : t("voiceNoDevice")]));
 
     var close = ui.el("button", { class: "btn btn-pink" }, [t("close")]);
     close.style.marginTop = "12px"; close.style.width = "100%";
@@ -348,6 +350,27 @@
     MM.audio.unlock();
     window.removeEventListener("pointerdown", once);
   }, { once: true });
+
+  // import dei progressi da un link (#import=<base64url di mm.v1>): serve per portare i progressi
+  // su un altro dispositivo o browser (es. da Chrome al Browser personale di Samsung Kids).
+  // Non sovrascrive mai progressi più ricchi di quelli che arrivano.
+  (function importFromLink() {
+    var m = /[#&]import=([A-Za-z0-9+\/=_-]+)/.exec((typeof location !== "undefined" && location.hash) || "");
+    if (!m) return;
+    try {
+      var b64 = m[1].replace(/-/g, "+").replace(/_/g, "/");
+      var data = JSON.parse(decodeURIComponent(escape(atob(b64))));
+      if (data && data.skills) {
+        delete data._meta;
+        var here = MM.storage.totals(), there = MM.storage.totals(data);
+        if (there.attempts >= here.attempts) {
+          localStorage.setItem("mm.v1", JSON.stringify(data));
+          try { localStorage.removeItem("mm.sync_hash"); } catch (e) {}   // il nuovo browser rimanda i progressi
+        }
+      }
+    } catch (e) {}
+    try { history.replaceState(null, "", location.pathname + location.search); } catch (e) {}
+  })();
 
   // avvio diretto di un gioco (per prove): index.html#play=tens&level=3
   var direct = /play=(\w+)(?:&level=(\d+))?/.exec((typeof location !== "undefined" && location.hash) || "");

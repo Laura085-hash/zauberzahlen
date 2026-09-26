@@ -94,7 +94,22 @@
       });
       actions.appendChild(printBtn);
 
-      if (!data) {   // cancellare ha senso solo per i progressi di questo dispositivo
+      if (!data) {   // trasferire/cancellare ha senso solo per i progressi di questo dispositivo
+        // link #import=… per portare i progressi su un altro dispositivo o browser
+        var shareBtn = ui.el("button", { class: "btn btn-ghost" }, ["📤 " + t("exportLink")]);
+        shareBtn.style.color = "#fff";
+        shareBtn.addEventListener("click", function () {
+          var raw = MM.storage.raw();
+          if (!raw) return;
+          var b64 = btoa(unescape(encodeURIComponent(raw))).replace(/\+/g, "-").replace(/\//g, "_").replace(/=+$/, "");
+          var url = location.origin + location.pathname + "#import=" + b64;
+          var done = function () { window.alert(t("exportCopied")); };
+          if (navigator.share) { navigator.share({ title: "Zauberzahlen", url: url }).catch(function () {}); }
+          else if (navigator.clipboard && navigator.clipboard.writeText) { navigator.clipboard.writeText(url).then(done, function () { window.prompt(t("exportLink"), url); }); }
+          else { window.prompt(t("exportLink"), url); }
+        });
+        actions.appendChild(shareBtn);
+
         var resetBtn = ui.el("button", { class: "btn btn-ghost" }, ["🧹 " + t("reset")]);
         resetBtn.style.color = "#fff";
         resetBtn.addEventListener("click", function () {
