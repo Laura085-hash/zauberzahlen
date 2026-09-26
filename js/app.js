@@ -31,6 +31,7 @@
   function home() {
     ui.clear(root);
     document.title = t("appTitle");
+    if (MM.sync) MM.sync.onHome();   // recupera un invio dei progressi rimasto in sospeso
 
     var gear = ui.el("button", { class: "icon-btn" }, ["⚙️"]);
     gear.addEventListener("click", function () { MM.audio.sfx("tap"); openSettings(); });

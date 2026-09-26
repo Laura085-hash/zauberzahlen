@@ -21,17 +21,30 @@
     };
   }
 
-  function load() {
-    var data;
-    try { data = JSON.parse(localStorage.getItem(KEY)); } catch (e) { data = null; }
+  // completa un oggetto progressi (anche uno arrivato da un altro dispositivo) con i default
+  function withDefaults(data) {
     if (!data || typeof data !== "object") data = {};
     data.skills = data.skills || {};
     SKILL_IDS.forEach(function (id) {
-      if (!data.skills[id]) data.skills[id] = blankSkill();
+      var sk = data.skills[id];
+      if (!sk) { data.skills[id] = blankSkill(); return; }
+      sk.recent = sk.recent || []; sk.recall = sk.recall || { c: 0, t: 0 }; sk.count = sk.count || { c: 0, t: 0 };
+      sk.level = sk.level || 1; sk.attempts = sk.attempts || 0; sk.correct = sk.correct || 0; sk.sessions = sk.sessions || 0;
     });
     data.collection = data.collection || {};   // emoji -> count
     data.words = data.words || {};             // Lernwort -> { r: giuste al 1° colpo, w: sbagliate }
     return data;
+  }
+
+  function load() {
+    var data;
+    try { data = JSON.parse(localStorage.getItem(KEY)); } catch (e) { data = null; }
+    return withDefaults(data);
+  }
+
+  // copia grezza dei progressi (per la sincronizzazione)
+  function raw() {
+    try { return localStorage.getItem(KEY) || ""; } catch (e) { return ""; }
   }
 
   function save(data) {
@@ -81,8 +94,9 @@
     return "started";
   }
 
-  function getSummary() {
-    var data = load();
+  // riepilogo per la dashboard; con `src` usa quei progressi (es. arrivati dal telefono) invece dei locali
+  function getSummary(src) {
+    var data = src ? withDefaults(src) : load();
     return SKILL_IDS.map(function (id) {
       var sk = data.skills[id];
       var acc = sk.attempts ? sk.correct / sk.attempts : 0;
@@ -96,9 +110,22 @@
         attempts: sk.attempts,
         accuracy: acc,
         recallShare: recallShare,
+        sessions: sk.sessions || 0,
         status: statusOf(sk, id)
       };
     });
+  }
+
+  // totali per la dashboard e per il riepilogo inviato ai genitori
+  function totals(src) {
+    var data = src ? withDefaults(src) : load();
+    var att = 0, cor = 0, sess = 0, played = 0;
+    SKILL_IDS.forEach(function (id) {
+      var sk = data.skills[id];
+      if (!sk.attempts) return;
+      played++; att += sk.attempts; cor += sk.correct; sess += sk.sessions || 0;
+    });
+    return { attempts: att, correct: cor, sessions: sess, games: played };
   }
 
   function stars(id) {
@@ -121,7 +148,7 @@
   }
 
   // statistiche per Lernwort: le parole sbagliate tornano più spesso (gioco "Schwere Wörter")
-  function wordStats() { return load().words; }
+  function wordStats(src) { return (src ? withDefaults(src) : load()).words; }
   function recordWord(word, ok) {
     var data = load();
     var s = data.words[word] || { r: 0, w: 0 };
@@ -140,6 +167,8 @@
     getSkill: function (id) { return load().skills[id]; },
     recordSession: recordSession,
     getSummary: getSummary,
+    totals: totals,
+    raw: raw,
     stars: stars,
     collection: collection,
     addSticker: addSticker,

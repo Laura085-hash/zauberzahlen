@@ -187,8 +187,8 @@ button { font-family: inherit; cursor: pointer; border: none; }
 /* ===== parent dashboard ===== */
 .parent { color: #fff; }
 .panel { background: #fff; color: var(--ink); border-radius: var(--r); padding: 16px; box-shadow: var(--shadow); margin-bottom: 12px; }
-.skill-row { padding: 12px 0; border-bottom: 1px solid #eee; }
-.skill-row:last-child { border-bottom: none; }
+.skill-row, .word-row { padding: 12px 0; border-bottom: 1px solid #eee; }
+.skill-row:last-child, .word-row:last-child { border-bottom: none; }
 .skill-head { display: flex; align-items: center; gap: 10px; font-weight: 800; color: var(--violet); }
 .bar { height: 12px; border-radius: 8px; background: #eee; overflow: hidden; margin: 8px 0 4px; }
 .bar > span { display: block; height: 100%; background: linear-gradient(90deg, var(--mint), var(--good)); }

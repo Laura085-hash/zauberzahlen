@@ -1,4 +1,4 @@
-/* ===== audio: voce (Web Speech) + effetti sonori (WebAudio) ===== */
+/* ===== audio: voce (clip pre-registrati + Web Speech) + effetti sonori (WebAudio) ===== */
 (function () {
   var SOUND_KEY = "mm.sound";
   var soundOn = (function () {
@@ -56,6 +56,7 @@
     }
   }
 
+  /* ---------- voci del dispositivo (Web Speech): usate solo per i testi senza clip ---------- */
   var voices = [];
   function loadVoices() { try { voices = window.speechSynthesis.getVoices() || []; } catch (e) { voices = []; } }
   if ("speechSynthesis" in window) {
@@ -95,19 +96,96 @@
     return c[0];
   }
 
-  // speak(testo [, lingua forzata es. "de-DE", velocità, accoda=true per non interrompere la frase in corso])
-  function speak(text, forceLang, rate, queue) {
-    if (!soundOn || !text || !("speechSynthesis" in window)) return;
+  /* ---------- clip pre-registrati (voce neurale Katja/Sonia, js/voice-manifest.js) ----------
+     Le Lernwörter, le sillabe, le frasi del Diktat, il saluto e le lodi hanno un mp3 registrato:
+     suonano uguali su ogni dispositivo, anche dove non c'è nessuna voce tedesca installata. */
+  function norm(text) { return String(text).replace(/\s+/g, " ").trim(); }
+  function speedOf(rate) { return rate <= 0.75 ? "x" : (rate < 0.9 ? "s" : "n"); }
+
+  function clipFor(text, lang, rate) {
+    var clips = window.MM && MM.voiceClips;
+    if (!clips) return null;
+    var l = lang.slice(0, 2), n = norm(text), sp = speedOf(rate);
+    var order = sp === "n" ? ["n", "s"] : (sp === "s" ? ["s", "n", "x"] : ["x", "s", "n"]);
+    for (var i = 0; i < order.length; i++) {
+      var c = clips[l + "|" + order[i] + "|" + n];
+      if (c) return c;
+    }
+    return null;
+  }
+
+  // testo intero → un clip; altrimenti frase per frase ("PERFEKT! Alles richtig!") se esistono tutte
+  function clipParts(text, lang, rate) {
+    var one = clipFor(text, lang, rate);
+    if (one) return [{ clip: one, text: norm(text) }];
+    var parts = norm(text).replace(/([.!?])\s+/g, "$1\u0001").split("\u0001").filter(Boolean);
+    if (parts.length < 2) return null;
+    var out = [];
+    for (var i = 0; i < parts.length; i++) {
+      var c = clipFor(parts[i], lang, rate);
+      if (!c) return null;
+      out.push({ clip: c, text: parts[i] });
+    }
+    return out;
+  }
+
+  /* ---------- coda unica: clip e voce del dispositivo in sequenza ---------- */
+  var queue = [], playing = false, current = null;
+
+  function stopAll() {
+    queue = [];
+    if (current && current.audio) { try { current.audio.pause(); current.audio.src = ""; } catch (e) {} }
+    current = null; playing = false;
+    if ("speechSynthesis" in window) { try { window.speechSynthesis.cancel(); } catch (e) {} }
+  }
+
+  function ttsNow(text, lang, rate, cb) {
+    if (!("speechSynthesis" in window)) { cb(); return; }
+    var done = false, tm = null;
+    function fin() { if (done) return; done = true; clearTimeout(tm); cb(); }
     try {
-      if (!queue) window.speechSynthesis.cancel();
-      var u = new SpeechSynthesisUtterance(String(text));
-      var lang = forceLang || MM.i18n.voiceLang();
+      var u = new SpeechSynthesisUtterance(text);
       u.lang = lang;
       var v = chooseVoice(lang);
       if (v) { u.voice = v; u.lang = v.lang; }
       u.rate = rate || 0.96; u.pitch = 1.05;   // più morbida e naturale
+      u.onend = fin; u.onerror = fin;
+      tm = setTimeout(fin, Math.min(20000, 1500 + text.length * 90));   // Chrome a volte non manda onend
+      current = { utter: u };
       window.speechSynthesis.speak(u);
-    } catch (e) {}
+    } catch (e) { fin(); }
+  }
+
+  function playNext() {
+    var item = queue.shift();
+    if (!item) { playing = false; current = null; return; }
+    playing = true;
+    if (!item.clip) { ttsNow(item.text, item.lang, item.rate, playNext); return; }
+    var a = new Audio(item.clip), done = false;
+    a.preload = "auto";
+    current = { audio: a };
+    function fin() { if (done) return; done = true; if (current && current.audio === a) current = null; playNext(); }
+    function fallback() { if (done) return; done = true; ttsNow(item.text, item.lang, item.rate, playNext); }   // offline / clip mancante
+    a.onended = fin;
+    a.onerror = fallback;
+    try {
+      var p = a.play();
+      if (p && p.catch) p.catch(fallback);
+    } catch (e) { fallback(); }
+  }
+
+  function enqueue(item) { queue.push(item); if (!playing) playNext(); }
+
+  // speak(testo [, lingua forzata es. "de-DE", velocità, accoda=true per non interrompere la frase in corso])
+  function speak(text, forceLang, rate, queueIt) {
+    if (!soundOn || !text) return;
+    text = String(text);
+    var lang = forceLang || MM.i18n.voiceLang();
+    rate = rate || 0.96;
+    if (!queueIt) stopAll();
+    var parts = clipParts(text, lang, rate);
+    if (parts) parts.forEach(function (p) { enqueue({ clip: p.clip, text: p.text, lang: lang, rate: rate }); });
+    else enqueue({ text: text, lang: lang, rate: rate });
   }
 
   // pronuncia un numero nella lingua corrente
@@ -121,7 +199,7 @@
   function setSound(on) {
     soundOn = !!on;
     try { localStorage.setItem(SOUND_KEY, soundOn ? "1" : "0"); } catch (e) {}
-    if (!soundOn && "speechSynthesis" in window) { try { window.speechSynthesis.cancel(); } catch (e) {} }
+    if (!soundOn) stopAll();
   }
 
   window.MM = window.MM || {};
@@ -131,7 +209,10 @@
     speakNumber: speakNumber,
     speakSyllables: speakSyllables,
     setSound: setSound,
+    stop: stopAll,
     get on() { return soundOn; },
+    // c'è un clip registrato per questo testo?
+    hasClip: function (text, lang, rate) { return !!clipParts(text, lang || "de-DE", rate || 0.96); },
     // per il menù "Voce" nelle impostazioni
     listVoices: function (lang) { return voicesFor(lang).map(function (v) { return { name: v.name, lang: v.lang }; }); },
     getVoiceName: function (lang) { return savedVoiceName(lang); },

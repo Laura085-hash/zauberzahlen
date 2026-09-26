@@ -279,6 +279,13 @@
       reset: "Fortschritt löschen",
       resetAsk: "Wirklich allen Fortschritt löschen?",
       reportTitle: "Übungsbericht",
+      totalsLine: "{s} Spiele · {a} Aufgaben · {c} beim 1. Versuch richtig ({p}%)",
+      wordsTitle: "Lernwörter",
+      wordsLegend: "richtig beim 1. Versuch ✓ · Fehler ✗ (schwierige Wörter kommen öfter dran)",
+      cloudLoading: "Lade die Daten von Joys Handy …",
+      cloudFrom: "Daten von Joys Handy, Stand {d}",
+      cloudNone: "Noch keine Daten vom Handy – die App schickt sie nach dem Spielen von selbst.",
+      cloudErr: "Daten vom Handy nicht erreichbar ({e}). Unten: dieses Gerät.",
       reportNote: "Spielerische Übung. Bis 20: Mengenverständnis, Kraft der 5, Zerlegen, Plus und Minus. Bis 100: Zehner & Einer (Bündeln, Stellentafel), Rechnen mit Zehnern, Nachbarzahlen, Zahlenstrahl und Hundertertafel, Muster, Zahlenmauern, Zahlendreiecke. Rechnen bis 100 (Tastenfeld, keine Auswahl): Plus und Minus mit Zehnerübergang, Ergänzen, Päckchen „Immer 100“, Verdoppeln/Halbieren (auch Tabellen und Rechengeschichten mit Franken), Malnehmen, Vergleichen. Deutsch: Lernwörter zum Diktat, schwere Wörter schreiben, ganzes Diktat. Bei Fehlern wird nie die Lösung gezeigt – nur ein Hinweis, bis das Kind selbst darauf kommt.",
       generated: "Erstellt am"
     },
@@ -560,6 +567,13 @@
       reset: "Clear progress",
       resetAsk: "Really clear all progress?",
       reportTitle: "Practice report",
+      totalsLine: "{s} games · {a} tasks · {c} right first time ({p}%)",
+      wordsTitle: "Dictation words",
+      wordsLegend: "right first time ✓ · mistakes ✗ (tricky words come up more often)",
+      cloudLoading: "Loading the data from Joy's phone …",
+      cloudFrom: "Data from Joy's phone, as of {d}",
+      cloudNone: "No data from the phone yet – the app sends it by itself after playing.",
+      cloudErr: "Phone data not reachable ({e}). Below: this device.",
       reportNote: "Playful practice. Up to 20: number sense, power of 5, decomposition, addition and subtraction. Up to 100: tens & ones (bundling, place value chart), calculating with tens, neighbour numbers, number line and hundred board, patterns, number walls, number triangles. Calculating to 100 (keypad, no multiple choice): plus and minus crossing tens, making numbers, “Always 100” packages, doubling/halving (also tables and word problems with francs), times, comparing. German: dictation words, writing tricky words, whole dictation. On a mistake the answer is never shown – only a hint, until the child finds it herself.",
       generated: "Generated on"
     }
