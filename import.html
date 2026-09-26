@@ -1,0 +1,56 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="google" content="notranslate">
+  <title>Zauberzahlen · Fortschritt übernehmen</title>
+  <style>
+    body { margin: 0; min-height: 100vh; display: flex; align-items: center; justify-content: center;
+           background: linear-gradient(160deg, #6a4bb6, #3b2a6e); color: #fff; font-family: sans-serif; text-align: center; padding: 24px; }
+    .box { background: rgba(255,255,255,.12); border-radius: 20px; padding: 24px; max-width: 420px; font-size: 1.2rem; line-height: 1.5; }
+    a { color: #fff; }
+  </style>
+</head>
+<body>
+  <div class="box" id="msg">…</div>
+  <script>
+    // Porta i progressi (mm.v1) su questo browser: import.html?d=<base64url di mm.v1>  (anche #d=…)
+    // Stessa origine dell'app → stesso localStorage. Non sovrascrive mai progressi più ricchi.
+    (function () {
+      var msg = document.getElementById("msg");
+      function attempts(d) {
+        var n = 0, sk = (d && d.skills) || {};
+        for (var k in sk) n += (sk[k] && sk[k].attempts) || 0;
+        return n;
+      }
+      function go(text, delay) {
+        msg.innerHTML = text + '<br><br><a href="./">🦄 Zauberzahlen</a>';
+        setTimeout(function () { location.replace("./"); }, delay || 2500);
+      }
+      var src = (location.search || "") + " " + (location.hash || "");
+      var m = /[?&#]d=([A-Za-z0-9+\/=_-]+)/.exec(src);
+      if (!m) { go("⚠️ Kein Fortschritt im Link."); return; }
+      try {
+        var b64 = m[1].replace(/-/g, "+").replace(/_/g, "/");
+        var data = JSON.parse(decodeURIComponent(escape(atob(b64))));
+        if (!data || !data.skills) { go("⚠️ Link unvollständig (" + m[1].length + " Zeichen)."); return; }
+        delete data._meta;
+        var here = null;
+        try { here = JSON.parse(localStorage.getItem("mm.v1")); } catch (e) {}
+        var a1 = attempts(here), a2 = attempts(data);
+        if (a2 >= a1) {
+          localStorage.setItem("mm.v1", JSON.stringify(data));
+          try { localStorage.removeItem("mm.sync_hash"); } catch (e) {}
+          var games = 0; for (var k in data.skills) if (data.skills[k] && data.skills[k].attempts) games++;
+          go("✅ Fortschritt übernommen: " + a2 + " Aufgaben in " + games + " Spielen.");
+        } else {
+          go("ℹ️ Hier ist schon mehr Fortschritt gespeichert (" + a1 + " ≥ " + a2 + " Aufgaben). Nichts geändert.");
+        }
+      } catch (e) {
+        go("⚠️ Link nicht lesbar (" + m[1].length + " Zeichen): " + (e && e.message));
+      }
+    })();
+  </script>
+</body>
+</html>

@@ -355,7 +355,9 @@
   // su un altro dispositivo o browser (es. da Chrome al Browser personale di Samsung Kids).
   // Non sovrascrive mai progressi più ricchi di quelli che arrivano.
   (function importFromLink() {
-    var m = /[#&]import=([A-Za-z0-9+\/=_-]+)/.exec((typeof location !== "undefined" && location.hash) || "");
+    // nel frammento (#import=) o nella query (?import=): alcuni browser (Samsung Kids) scartano il frammento
+    var src = (typeof location !== "undefined") ? ((location.search || "") + " " + (location.hash || "")) : "";
+    var m = /[?&#]import=([A-Za-z0-9+\/=_-]+)/.exec(src);
     if (!m) return;
     try {
       var b64 = m[1].replace(/-/g, "+").replace(/_/g, "/");
@@ -369,7 +371,7 @@
         }
       }
     } catch (e) {}
-    try { history.replaceState(null, "", location.pathname + location.search); } catch (e) {}
+    try { history.replaceState(null, "", location.pathname); } catch (e) {}
   })();
 
   // avvio diretto di un gioco (per prove): index.html#play=tens&level=3
