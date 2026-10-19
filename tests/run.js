@@ -264,9 +264,25 @@ function genChecks() {
       if (id === "words") { assert.ok(r.word && r.word.syl.join("") === r.word.w, "words syl " + r.word.w); if (r.mode === "sentence") assert.ok(r.sentence.indexOf(r.word.w) >= 0, "words sentence"); if (r.mode === "article") assert.ok(r.word.art, "article"); }
       if (id === "maps") {
         assert.ok(r.q && r.q.indexOf("{") < 0 && r.hint && r.hint.length > 8 && r.ans, "maps round " + r.q);
-        assert.strictEqual(r.topic, ["compass", "symbol", "town"][i % 3], "maps topic order");
+        assert.strictEqual(r.topic, ["compass", "symbol", "dir", "places", "town"][(i % 6) % 5], "maps topic order");
         if (r.opts) assert.ok(r.opts.indexOf(r.ans) >= 0, "maps answer in options " + r.q);
-        if (r.kind === "map") assert.ok(r.center !== r.other && r.extra.indexOf(r.other) < 0 && r.extra.indexOf(r.center) < 0, "maps distinct places");
+        if (r.kind === "map") {
+          var keys = [r.center, r.other].concat(r.extra.map(function (x) { return x.key; })), dirs = r.extra.map(function (x) { return x.dir; });
+          assert.strictEqual(keys.filter(function (k, j) { return keys.indexOf(k) === j; }).length, keys.length, "maps distinct places");
+          assert.ok(dirs.indexOf(r.dir) < 0, "maps extra not on target");
+        }
+        if (r.kind === "grid") {
+          var hit = Object.keys(r.cells).filter(function (k) { return r.cells[k].n === r.ans; });
+          assert.strictEqual(hit.length, 1, "grid target unique");
+          var pos = hit[0].split(",").map(Number), c0 = r.start[0], r0 = r.start[1];
+          var m = r.q.match(/go (north-east|north-west|south-east|south-west|north|south|east|west) (\d)/gi);
+          m.forEach(function (mv) { var mm = /go (\S+) (\d)/i.exec(mv), d = ["north", "north-east", "east", "south-east", "south", "south-west", "west", "north-west"].indexOf(mm[1].toLowerCase());
+            var st = [[0, -1], [1, -1], [1, 0], [1, 1], [0, 1], [-1, 1], [-1, 0], [-1, -1]][d]; c0 += st[0] * +mm[2]; r0 += st[1] * +mm[2]; });
+          assert.ok(c0 === pos[0] && r0 === pos[1], "grid walk lands on target: " + r.q);
+          assert.ok(!r.cells[r.start[0] + "," + r.start[1]], "grid start empty");
+        }
+        if (r.kind === "street") assert.ok(r.q.indexOf("{") < 0 && r.traps.indexOf(r.ans) < 0, "street traps");
+        if (r.kind === "spell") assert.ok(r.opts.length >= 3 && r.opts.slice(1).indexOf(r.ans) < 0, "spell variants");
         assert.ok(r.hint.indexOf(r.ans) < 0 || r.kind === "rose" || r.ans.length < 3, "maps hint reveals answer: " + r.hint);
       }
       if (id === "diktatfull") assert.strictEqual(r.sentence, MM.diktat.SENTENCES[i % 6], "diktatfull order");

@@ -210,13 +210,13 @@
   }
 
   /* ---------- SESSIONE DI GIOCO ---------- */
-  function runSession(id, levelOverride) {
+  function runSession(id, levelOverride, startIdx) {
     var game = MM.games[id];
     if (game.lang) MM.i18n.useLang(game.lang);   // il test di geografia è in inglese: tutto in inglese
     var skill = MM.storage.getSkill(id);
     var level = levelOverride || skill.level;
     var total = game.rounds || 6;
-    var idx = 0, answered = false, streak = 0, wrongs = 0;
+    var idx = startIdx || 0, answered = false, streak = 0, wrongs = 0;
     var results = [];
 
     ui.clear(root);
@@ -377,8 +377,8 @@
     try { history.replaceState(null, "", location.pathname); } catch (e) {}
   })();
 
-  // avvio diretto di un gioco (per prove): index.html#play=tens&level=3
-  var direct = /play=(\w+)(?:&level=(\d+))?/.exec((typeof location !== "undefined" && location.hash) || "");
-  if (direct && MM.games[direct[1]]) runSession(direct[1], direct[2] ? parseInt(direct[2], 10) : undefined);
+  // avvio diretto di un gioco (per prove): index.html#play=tens&level=3 (&from=N: parte dal round N)
+  var direct = /play=(\w+)(?:&level=(\d+))?(?:&from=(\d+))?/.exec((typeof location !== "undefined" && location.hash) || "");
+  if (direct && MM.games[direct[1]]) runSession(direct[1], direct[2] ? parseInt(direct[2], 10) : undefined, direct[3] ? parseInt(direct[3], 10) : 0);
   else home();
 })();
