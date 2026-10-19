@@ -12,6 +12,9 @@
       sec20: "✨ Bis 20",
       sec100: "💯 Bis 100",
       secDe: "📝 Deutsch",
+      secGeo: "🗺️ Geografie (Test auf Englisch)",
+      g_maps: "Map Explorer",
+      g_maps_sub: "Kompass · Kartensymbole · Town & City",
 
       g_subitizing: "Zauberzahlen",
       g_subitizing_sub: "Wie viele? Schau genau!",
@@ -304,6 +307,9 @@
       sec20: "✨ Up to 20",
       sec100: "💯 Up to 100",
       secDe: "📝 German",
+      secGeo: "🗺️ Geography",
+      g_maps: "Map Explorer",
+      g_maps_sub: "Compass · map symbols · town & city",
 
       g_subitizing: "Magic Count",
       g_subitizing_sub: "How many? Look closely!",
@@ -606,6 +612,13 @@
     return arr[Math.floor(Math.random() * arr.length)];
   }
 
+  // lingua solo per la sessione (non salvata): resetLang() torna a quella scelta nelle impostazioni
+  function useLang(l) { if (STR[l]) { lang = l; document.documentElement.lang = l; } }
+  function resetLang() {
+    var l; try { l = localStorage.getItem(LANG_KEY) || "de"; } catch (e) { l = "de"; }
+    useLang(l);
+  }
+
   function setLang(l) {
     if (!STR[l]) return;
     lang = l;
@@ -620,6 +633,8 @@
     t: t,
     pick: pick,
     setLang: setLang,
+    useLang: useLang,
+    resetLang: resetLang,
     get lang() { return lang; },
     voiceLang: function () { return lang === "de" ? "de-DE" : "en-US"; }
   };

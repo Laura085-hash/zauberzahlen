@@ -460,3 +460,15 @@ button { font-family: inherit; cursor: pointer; border: none; }
 .dtable .dcell.active { background: var(--gold); border-style: solid; animation: pulse 1s ease-in-out infinite; }
 .dtable .dcell.ok { background: var(--good); color: #fff; border: 3px solid transparent; animation: pop .3s ease; }
 .story { font-size: 3rem; line-height: 1; animation: float 2.6s ease-in-out infinite; }
+
+/* Map Explorer (geografia) */
+.maps-pic { display: flex; justify-content: center; margin: 4px 0 14px; }
+.maps-pic svg { max-width: 100%; height: auto; filter: drop-shadow(0 4px 10px rgba(75, 46, 131, .18)); }
+.maps-pic.sym-big svg { background: #fff; border-radius: 22px; padding: 10px; }
+.maps-emoji { font-size: 3.2rem; }
+.holder.maps-holder .choice { font-size: 1.35rem; min-width: 96px; }
+.holder.maps-holder .choice.symchoice { width: 96px; height: 96px; padding: 8px; min-width: 0; }
+.holder.maps-holder .choice.symchoice svg { width: 100%; height: 100%; }
+.maps-pic .minimap { width: min(330px, 90vw); }
+.maps-pic .rose { width: min(260px, 80vw); }
+.maps-emoji { font-size: 4.5rem; }
