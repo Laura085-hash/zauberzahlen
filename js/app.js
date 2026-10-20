@@ -5,7 +5,8 @@
   // sezioni della home: fino a 20 (1ª classe) · fino a 100 (2ª classe, quiz) ·
   // rechnen bis 100 (più difficile: tastierino, niente scelte) · tedesco (Diktat)
   var GAME_GROUPS = [
-    { key: "secGeo",  ids: ["maps"] },     // in cima: test di geografia del 20.10.2026
+    { key: "secGram", ids: ["grammar"] },  // in cima: grammar quiz del 27.10.2026
+    { key: "secGeo",  ids: ["maps"] },
     { key: "sec20",   ids: ["subitizing", "fives", "bonds", "addition", "subtraction"] },
     { key: "sec100",  ids: ["tens", "hundred", "neighbours", "numberline", "patterns", "wall", "triangle"] },
     { key: "secCalc", ids: ["plus100", "minus100", "complete", "always100", "double", "francs", "times", "compare"] },

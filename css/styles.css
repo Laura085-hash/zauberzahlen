@@ -475,3 +475,11 @@ button { font-family: inherit; cursor: pointer; border: none; }
 .maps-emoji { font-size: 4.5rem; }
 .maps-emoji.big { font-size: 6rem; line-height: 1.1; }
 .maps-pic .minimap { max-width: 92vw; height: auto; }
+
+/* Grammar Detective */
+.gram-card { background: #fff; color: var(--ink); border-radius: 18px; padding: 14px 18px; font-size: 1.35rem; font-weight: 700;
+  text-align: center; max-width: 92vw; box-shadow: var(--shadow); line-height: 1.35; }
+.gram-card.big { font-size: 2.4rem; padding: 14px 30px; }
+.gram-card u { text-decoration-color: var(--pink); text-decoration-thickness: 3px; }
+.gram-card.bubble { border-radius: 26px 26px 26px 6px; background: #fff7d6; }
+.holder.gram-holder .choice { font-size: 1.3rem; min-width: 96px; max-width: 92vw; white-space: normal; height: auto; min-height: 64px; padding: 10px 16px; }

@@ -13,6 +13,9 @@
       sec100: "💯 Bis 100",
       secDe: "📝 Deutsch",
       secGeo: "🗺️ Geografie (Test auf Englisch)",
+      secGram: "📘 Englisch-Grammatik (Test 27.10.)",
+      g_grammar: "Grammar Detective",
+      g_grammar_sub: "Noun · Verb · Adjective · Contractions · Pronouns",
       g_maps: "Map Explorer",
       g_maps_sub: "Kompass · Kartensymbole · Town & City",
 
@@ -308,6 +311,9 @@
       sec100: "💯 Up to 100",
       secDe: "📝 German",
       secGeo: "🗺️ Geography",
+      secGram: "📘 English Grammar (quiz 27.10)",
+      g_grammar: "Grammar Detective",
+      g_grammar_sub: "Noun · verb · adjective · contractions · pronouns",
       g_maps: "Map Explorer",
       g_maps_sub: "Compass · map symbols · town & city",
 
