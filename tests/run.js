@@ -106,7 +106,7 @@ function flush() {
  "js/games/tens.js", "js/games/hundred.js", "js/games/neighbours.js", "js/games/numberline.js", "js/games/patterns.js",
  "js/games/wall.js", "js/games/triangle.js",
  "js/games/plus100.js", "js/games/minus100.js", "js/games/complete.js", "js/games/always100.js", "js/games/double.js", "js/games/francs.js", "js/games/times.js", "js/games/compare.js",
- "js/games/diktat.js", "js/games/words.js", "js/games/diktatfull.js", "js/games/maps.js", "js/games/grammar.js", "js/games/herbst.js", "js/parent.js", "js/app.js"
+ "js/games/diktat.js", "js/games/words.js", "js/games/diktatfull.js", "js/games/maps.js", "js/games/grammar.js", "js/games/herbst.js", "js/parent.js", "js/report.js", "js/app.js"
 ].forEach(function (f) { (new Function(fs.readFileSync(path.join(ROOT, f), "utf8")))(); });
 
 var spoken = [];
@@ -371,7 +371,19 @@ summary.forEach(function (s) { assert.ok(s.attempts > 0, "attempts " + s.id); })
 // statistiche per parola (Schwere Wörter): ogni parola ha registrato almeno un esito
 var ws = MM.storage.wordStats();
 assert.ok(Object.keys(ws).length >= 10, "word stats: " + Object.keys(ws).length);
-// pannello genitori
+// registro esercizi + report giornaliero (email e pannello)
+var lg = MM.storage.log();
+assert.ok(lg.length > 0 && lg.length <= 400, "log size " + lg.length);
+lg.forEach(function (e) { assert.ok(e.g && e.t && e.s && typeof e.q === "string" && e.q.indexOf("{") < 0 && Array.isArray(e.w), "log entry " + JSON.stringify(e)); });
+var rep = MM.report.daily(null);
+// (il registro tiene al massimo 400 righe e i timer finti non fanno passare il tempo: restano gli ultimi giochi)
+assert.ok(rep.rounds > 50 && rep.games.length >= 1 && rep.sessions >= 1, "report oggi: " + rep.rounds + " / " + rep.games.length + " / " + rep.sessions);
+assert.ok(rep.games.some(function (g) { return g.errors.length > 0 && g.errors[0].w.length > 0; }), "report errori con la risposta sbagliata");
+var txt = MM.report.text(null, new Date()).join("\n");
+assert.ok(txt.indexOf("OGGI") === 0 && txt.indexOf("Errori di oggi") > 0 && txt.indexOf("Ultimi giorni") > 0 && txt.indexOf("{") < 0, "report testo:\n" + txt.slice(0, 300));
+assert.ok(MM.report.history(null, 7).length >= 1, "report history");
+// pannello genitori (con il pannello "Heute" in cima)
 var wrap = new Node("div"); MM.parent.render(wrap);
 assert.ok(wrap.querySelectorAll(".skill-row").length === N_GAMES, "parent rows");
+assert.ok(wrap.querySelectorAll(".word-row").length > 5, "parent report rows");
 console.log("OK — sessioni: " + stats.sessions + ", errori simulati con suggerimento: " + stats.wrong + ", " + (Date.now() - t0) + " ms");

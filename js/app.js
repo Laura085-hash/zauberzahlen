@@ -226,6 +226,36 @@
   }
 
   /* ---------- SESSIONE DI GIOCO ---------- */
+  // descrizione corta dell'esercizio per il report ai genitori ("38 + 5 = ?", "Mütze", "Which one is spelled right?")
+  function describeRound(id, r) {
+    if (!r || typeof r !== "object") return "";
+    var s = "";
+    if (r.q) s = r.q;
+    else if (r.word && r.word.w) s = (r.mode === "article" && r.word.art ? r.word.art + " " : "") + r.word.w;
+    else if (r.sentence) s = r.sentence;
+    else if (r.text) s = r.text;
+    else if (r.l && r.r && r.l.text != null) s = r.l.text + " ○ " + r.r.text;
+    else if (typeof r.a === "number" && typeof r.b === "number") {
+      var op = r.op || (/plus|addition/.test(id) ? "+" : /minus|subtraction/.test(id) ? "−" : id === "times" ? "×" : "+");
+      s = r.a + " " + op + " " + r.b + " = ?";
+    }
+    else if (r.a != null && r.c != null) s = r.a + " + ? = " + r.c;
+    else if (r.b != null && r.c != null) s = "? + " + r.b + " = " + r.c;
+    else if (r.c != null && r.ans != null) s = "100 − ? = " + r.c;
+    else if (r.mode === "double" && r.n != null) s = "2 × " + r.n;
+    else if (r.mode === "half" && r.n != null) s = r.n + " : 2";
+    else if (r.x != null && r.y != null) s = r.x + " − " + r.y;
+    else if (r.seq) s = r.seq.slice(0, 5).map(function (v) { return typeof v === "object" ? "▪" : v; }).join(" ") + " …";
+    else if (r.values) s = "Päckchen " + r.values.join("/");
+    else if (r.tops) s = "Tabelle " + r.tops.join("/");
+    else if (r.t != null && r.o != null) s = r.t + " Zehner " + r.o + " Einer";
+    else if (r.n != null) s = String(r.n);
+    else if (r.v != null) s = String(r.v);
+    else s = r.mode || r.kind || "";
+    return String(s).replace(/\s+/g, " ").slice(0, 48);
+  }
+  function topicOf(r) { return (r && (r.topic || r.mode || r.kind || r.form)) || ""; }
+
   function runSession(id, levelOverride, startIdx) {
     var game = MM.games[id];
     if (game.lang) MM.i18n.useLang(game.lang);   // il test di geografia è in inglese: tutto in inglese
@@ -234,6 +264,7 @@
     var total = game.rounds || 6;
     var idx = startIdx || 0, answered = false, streak = 0, wrongs = 0;
     var results = [];
+    var cur = null, wrongList = [], sessionStart = Math.floor(Date.now() / 1000);
 
     ui.clear(root);
     document.title = t(game.nameKey);
@@ -275,6 +306,10 @@
           answered = true;
           var firstTry = (wrongs === 0);
           results.push({ correct: firstTry, recall: !!opts.recall && firstTry });
+          try {   // registro per il report ai genitori
+            MM.storage.recordAnswer({ t: Math.floor(Date.now() / 1000), s: sessionStart, g: id, L: level, k: topicOf(cur),
+                                      q: describeRound(id, cur), ok: firstTry ? 1 : 0, w: wrongList.slice(0, 3) });
+          } catch (e) {}
           hintEl.hidden = true;
           if (firstTry) {
             streak++;
@@ -292,6 +327,8 @@
         } else {
           wrongs++;
           streak = 0;
+          var la = MM.ui.lastAnswer; MM.ui.lastAnswer = null;
+          if (la != null && la !== "") wrongList.push(String(la).slice(0, 30));
           MM.audio.sfx("wrong"); ui.shake(stage);
           var msg = MM.i18n.pick("tryAgain");
           var hint = opts.hint || "";
@@ -309,8 +346,9 @@
       ui.clear(stage);
       promptEl.textContent = "";
       hintEl.hidden = true; hintEl.textContent = "";
-      var round = game.makeRound(level, idx);   // idx: per i giochi in ordine fisso (Ganzes Diktat)
-      game.render(stage, round, api);
+      cur = game.makeRound(level, idx);   // idx: per i giochi in ordine fisso (Ganzes Diktat)
+      wrongList = []; MM.ui.lastAnswer = null;
+      game.render(stage, cur, api);
     }
 
     function endSession() {

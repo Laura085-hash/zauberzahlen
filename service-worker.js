@@ -1,7 +1,7 @@
 // Service worker per uso offline + aggiornamenti automatici.
 // Strategia: NETWORK-FIRST (online = sempre l'ultima versione),
 // con fallback alla cache quando si è offline.
-const CACHE = 'zauberzahlen-v11';
+const CACHE = 'zauberzahlen-v12';
 const ASSETS = [
   './',
   './index.html',
@@ -41,6 +41,7 @@ const ASSETS = [
   './js/sync.js',
   './js/cloud.js',
   './js/parent.js',
+  './js/report.js',
   './js/app.js',
   './assets/icon.svg'
 ];

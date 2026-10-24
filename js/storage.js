@@ -33,6 +33,7 @@
     });
     data.collection = data.collection || {};   // emoji -> count
     data.words = data.words || {};             // Lernwort -> { r: giuste al 1° colpo, w: sbagliate }
+    data.log = data.log || [];                 // registro esercizi (vedi recordAnswer)
     return data;
   }
 
@@ -157,6 +158,19 @@
     save(data);
   }
 
+  // registro esercizi per il report ai genitori: una riga per esercizio risolto
+  // { t: secondi, s: inizio sessione (secondi), g: gioco, L: livello, k: argomento, q: domanda, ok: 1 = giusto al 1° colpo, w: [risposte sbagliate] }
+  var LOG_MAX = 400, LOG_DAYS = 21;
+  function recordAnswer(e) {
+    var data = load();
+    data.log.push(e);
+    var minT = Math.floor(Date.now() / 1000) - LOG_DAYS * 86400;
+    data.log = data.log.filter(function (x) { return x && x.t >= minT; });
+    if (data.log.length > LOG_MAX) data.log = data.log.slice(-LOG_MAX);
+    save(data);
+  }
+  function getLog(src) { return (src ? withDefaults(src) : load()).log; }
+
   function reset() {
     try { localStorage.removeItem(KEY); } catch (e) {}
   }
@@ -174,6 +188,10 @@
     addSticker: addSticker,
     wordStats: wordStats,
     recordWord: recordWord,
+    recordAnswer: recordAnswer,
+    log: getLog,
+    // progressi completi (locali o di un altro dispositivo) con i default
+    data: function (src) { return src ? withDefaults(src) : load(); },
     reset: reset
   };
 })();

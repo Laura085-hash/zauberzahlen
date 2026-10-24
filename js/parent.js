@@ -68,6 +68,8 @@
       var summary = MM.storage.getSummary(data);
       var tot = MM.storage.totals(data);
 
+      if (MM.report) body.appendChild(MM.report.panel(data));   // oggi: esercizi, errori, meglio/da lavorare, ultimi giorni
+
       var panel = ui.el("div", { class: "panel" });
       panel.appendChild(ui.el("h2", {}, [t("parentIntro")]));
       panel.appendChild(ui.el("div", { class: "muted" }, [t("totalsLine", {

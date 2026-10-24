@@ -110,6 +110,7 @@
     var btn = ui.el("button", { class: "btn btn-pink check" }, [t("check")]);
     function go() {
       MM.audio.unlock();
+      MM.ui.lastAnswer = inp.value;   // per il registro degli esercizi
       var res = check(inp.value);
       ui.clear(fb);
       if (res.diff) fb.appendChild(res.diff);

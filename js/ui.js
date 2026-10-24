@@ -73,6 +73,7 @@
       b.addEventListener("click", function () {
         if (locked) return; locked = true;
         MM.audio.unlock();
+        MM.ui.lastAnswer = v;                 // per il registro degli esercizi
         var ok = (v === correct);
         b.classList.add(ok ? "correct" : "wrong");
         onResult(ok);
@@ -128,7 +129,7 @@
     "123456789".split("").forEach(function (d) { key(d, "", function () { digit(d); }); });
     key("⌫", "np-del", function () { val = val.slice(0, -1); MM.audio.sfx("tap"); show(); });
     key("0", "", function () { digit("0"); });
-    key("✓", "np-ok", function () { if (!val) { shake(disp); return; } locked = true; opts.onSubmit(parseInt(val, 10)); });
+    key("✓", "np-ok", function () { if (!val) { shake(disp); return; } locked = true; MM.ui.lastAnswer = val; opts.onSubmit(parseInt(val, 10)); });
     wrap.appendChild(disp); wrap.appendChild(keys);
     return {
       el: wrap, display: disp,

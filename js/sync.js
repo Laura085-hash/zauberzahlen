@@ -35,12 +35,18 @@
     try { data = JSON.parse(raw); } catch (e) { return null; }
     if (!data || typeof data !== "object") return null;
     var now = new Date();
+    // nel blocco dati solo gli ultimi 7 giorni del registro (limite di sendBeacon ~64 KB)
+    var minT = Math.floor(now.getTime() / 1000) - 7 * 86400;
+    data.log = (data.log || []).filter(function (e) { return e && e.t >= minT; });
     data._meta = { lang: MM.i18n.lang, device: isReal() ? "joy-phone" : location.hostname, test: !isReal(),
                    extracted: now.toISOString() };
     var tot = MM.storage.totals(data);
     var pct = tot.attempts ? Math.round(tot.correct / tot.attempts * 100) : 0;
     var who = isReal() ? "Joy" : "TEST";
-    var subject = "[Zauberzahlen] " + who + " · " + fmtDate(now) + " · " + tot.sessions + " Spiele · " + pct + "% richtig";
+    var td = MM.report ? MM.report.daily(data) : null;
+    var subject = "[Zauberzahlen] " + who + " · " + fmtDate(now)
+                + (td && td.rounds ? " · heute " + td.rounds + " Aufgaben " + td.pct + "%" : "")
+                + " · gesamt " + tot.sessions + " Spiele " + pct + "%";
 
     var lines = [];
     lines.push("Progressi di " + who + " in Zauberzahlen — " + fmtDate(now) + " " + fmtTime(now));
@@ -48,6 +54,11 @@
     lines.push("Totale: " + tot.sessions + " sessioni, " + tot.attempts + " risposte, " + tot.correct
                + " giuste al primo colpo (" + pct + "%), " + tot.games + " giochi provati.");
     lines.push("");
+    if (MM.report) {   // OGGI: cosa ha fatto, errori, miglioramenti, da lavorare, ultimi giorni
+      MM.report.text(data, now).forEach(function (l) { lines.push(l); });
+      lines.push("");
+      lines.push("TUTTI I GIOCHI (dall'inizio):");
+    }
     MM.storage.getSummary(data).forEach(function (s) {
       if (!s.attempts) return;
       var g = MM.games[s.id] || {};
