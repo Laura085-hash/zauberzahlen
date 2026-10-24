@@ -4,14 +4,29 @@
   var root = document.getElementById("app");
   // sezioni della home: fino a 20 (1ª classe) · fino a 100 (2ª classe, quiz) ·
   // rechnen bis 100 (più difficile: tastierino, niente scelte) · tedesco (Diktat)
+  // Le sezioni con `until` (data del test, AAAA-MM-GG) stanno IN CIMA finché il test non è passato,
+  // la più vicina per prima; dal giorno dopo scendono in fondo da sole.
   var GAME_GROUPS = [
-    { key: "secGram", ids: ["grammar"] },  // in cima: grammar quiz del 27.10.2026
-    { key: "secGeo",  ids: ["maps"] },
+    { key: "secGram",   ids: ["grammar"], until: "2026-10-27" },   // grammar quiz (Mrs Wennek)
+    { key: "secHerbst", ids: ["herbst"],  until: "2026-11-02" },   // Wörtchenprüfung «Herbst» (Herr Beric)
+    { key: "secGeo",    ids: ["maps"],    until: "2026-10-20" },   // Geografie-Test (vorbei)
     { key: "sec20",   ids: ["subitizing", "fives", "bonds", "addition", "subtraction"] },
     { key: "sec100",  ids: ["tens", "hundred", "neighbours", "numberline", "patterns", "wall", "triangle"] },
     { key: "secCalc", ids: ["plus100", "minus100", "complete", "always100", "double", "francs", "times", "compare"] },
     { key: "secDe",   ids: ["diktat", "words", "diktatfull"] }
   ];
+  function todayStr() {
+    var d = new Date(), p = function (n) { return (n < 10 ? "0" : "") + n; };
+    return d.getFullYear() + "-" + p(d.getMonth() + 1) + "-" + p(d.getDate());
+  }
+  function groupsInOrder() {
+    var today = todayStr();
+    var soon = GAME_GROUPS.filter(function (g) { return g.until && g.until >= today; })
+                          .sort(function (a, b) { return a.until < b.until ? -1 : (a.until > b.until ? 1 : 0); });
+    var plain = GAME_GROUPS.filter(function (g) { return !g.until; });
+    var past = GAME_GROUPS.filter(function (g) { return g.until && g.until < today; });
+    return soon.concat(plain, past);
+  }
 
   function speak(text) { MM.audio.speak(text); }
 
@@ -65,7 +80,7 @@
 
     // carte gioco, a sezioni
     var games = ui.el("div", { class: "games" });
-    GAME_GROUPS.forEach(function (grp) {
+    groupsInOrder().forEach(function (grp) {
       games.appendChild(ui.el("div", { class: "section-label" }, [t(grp.key)]));
       grp.ids.forEach(function (id) {
         var g = MM.games[id];

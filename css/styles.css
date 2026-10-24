@@ -483,3 +483,8 @@ button { font-family: inherit; cursor: pointer; border: none; }
 .gram-card u { text-decoration-color: var(--pink); text-decoration-thickness: 3px; }
 .gram-card.bubble { border-radius: 26px 26px 26px 6px; background: #fff7d6; }
 .holder.gram-holder .choice { font-size: 1.3rem; min-width: 96px; max-width: 92vw; white-space: normal; height: auto; min-height: 64px; padding: 10px 16px; }
+
+/* ===== Herbst-Wörter ===== */
+.picword { font-size: 4rem; line-height: 1.1; filter: drop-shadow(0 4px 0 rgba(0,0,0,0.15)); animation: pop .3s ease; }
+.merkwort[hidden] { display: none; }
+.artpick { color: #fff; font-weight: 800; font-size: 1.4rem; background: rgba(255,255,255,0.18); padding: 6px 16px; border-radius: 12px; animation: pop .3s ease; }

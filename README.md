@@ -43,6 +43,12 @@ raddoppiare/dimezzare anche in tabelle e problemi con i franchi, tabelline 2-5-1
 | 📝 Diktat | parole del dettato: riconoscere, completare, scrivere (parola, frase con buco, frase intera) |
 | ✍️ Tricky Words | scrivere le parole: guarda-memorizza-scrivi, sillabe, solo ascolto, nel contesto, con l'articolo. Le parole difficili e quelle sbagliate tornano più spesso |
 | 📖 Whole Dictation | tutte e 6 le frasi in ordine: copia → memorizza → un tratto per parola → dettato → velocità normale. Contano anche maiuscola e punto |
+| 🍂 Herbst-Wörter | le 15 parole della Wörtchenprüfung «Herbst» con disegno: riconoscere → lettere mancanti → guarda-memorizza-scrivi → solo ascolto (come alla prova) → con der/die/das. Le parole sbagliate tornano più spesso |
+| **Tests in inglese** | |
+| 🧭 Map Explorer | geografia: bussola a 8 punti, griglia "go north 2 squares", simboli delle mappe, indicazioni stradali, town/city/village |
+| 🔍 Grammar Detective | noun/verb/adjective, opposti e un-, am/is/are e -ing, nomi propri e maiuscole, contractions, pronouns |
+
+Le sezioni con una data (test a scuola) stanno in cima alla home finché il test non è passato, poi scendono in fondo da sole.
 
 C'è anche una schermata **genitore** (dietro un mini-cancello) con i progressi e un riepilogo stampabile.
 

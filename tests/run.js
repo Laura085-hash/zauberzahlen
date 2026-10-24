@@ -106,7 +106,7 @@ function flush() {
  "js/games/tens.js", "js/games/hundred.js", "js/games/neighbours.js", "js/games/numberline.js", "js/games/patterns.js",
  "js/games/wall.js", "js/games/triangle.js",
  "js/games/plus100.js", "js/games/minus100.js", "js/games/complete.js", "js/games/always100.js", "js/games/double.js", "js/games/francs.js", "js/games/times.js", "js/games/compare.js",
- "js/games/diktat.js", "js/games/words.js", "js/games/diktatfull.js", "js/games/maps.js", "js/games/grammar.js", "js/parent.js", "js/app.js"
+ "js/games/diktat.js", "js/games/words.js", "js/games/diktatfull.js", "js/games/maps.js", "js/games/grammar.js", "js/games/herbst.js", "js/parent.js", "js/app.js"
 ].forEach(function (f) { (new Function(fs.readFileSync(path.join(ROOT, f), "utf8")))(); });
 
 var spoken = [];
@@ -134,7 +134,7 @@ function lastGerman() { for (var i = spoken.length - 1; i >= 0; i--) if (spoken[
 var stats = { wrong: 0, rounds: 0, sessions: 0 };
 var LEVELS = { subitizing: 5, fives: 4, bonds: 4, addition: 5, subtraction: 5, tens: 5, hundred: 5, wall: 4, triangle: 4,
                patterns: 5, numberline: 5, neighbours: 4, plus100: 5, minus100: 5, complete: 5, always100: 5, double: 5, francs: 5, times: 5, compare: 5,
-               diktat: 5, words: 5, diktatfull: 5, maps: 5, grammar: 5 };
+               diktat: 5, words: 5, diktatfull: 5, maps: 5, grammar: 5, herbst: 5 };
 var N_GAMES = Object.keys(LEVELS).length;
 
 function expectWrongFeedback(before, where) {
@@ -209,6 +209,7 @@ function drive(id, level) {
         target = S.slice(p0.length, S.length - rest.length);
         assert.ok(target && S.indexOf(target) >= 0, where + ": parola mancante non ricavabile");
       }
+      if (lastRound && typeof lastRound.answer === "string") target = lastRound.answer;   // Herbst-Wörter
       // prima sbaglio apposta (minuscola / lettere sbagliate), poi scrivo giusto
       inp.value = target.toLowerCase() === target ? "xyz" : target.toLowerCase(); check.click();
       expectWrongFeedback(before, where);
@@ -294,6 +295,20 @@ function genChecks() {
         if (r.kind === "find") assert.ok(r.sentence.indexOf(r.ans) >= 0, "grammar find in sentence");
       }
       if (id === "diktatfull") assert.strictEqual(r.sentence, MM.diktat.SENTENCES[i % 6], "diktatfull order");
+      if (id === "herbst") {
+        var hw = r.word;
+        assert.ok(hw && hw.art && hw.pic && hw.syl.join("") === hw.w, "herbst word " + (hw && hw.w));
+        assert.ok(MM.herbst.PLAN[L].indexOf(r.mode) >= 0, "herbst mode " + r.mode + " at L" + L);
+        assert.strictEqual(r.mode, MM.herbst.PLAN[L][(i % 6) % MM.herbst.PLAN[L].length], "herbst mode order");
+        hw.gaps.forEach(function (g) {
+          assert.strictEqual(hw.w.slice(g[0], g[0] + g[1]), g[2][0], "herbst gap " + hw.w + " @" + g[0]);
+          assert.strictEqual(new Set(g[2]).size, g[2].length, "herbst gap options unique " + hw.w);
+        });
+        if (r.mode === "gap") { assert.ok(hw.gaps.indexOf(r.gap) >= 0, "herbst gap in word"); assert.strictEqual(r.answer, r.gap[2][0], "herbst gap answer"); }
+        else assert.strictEqual(r.answer, hw.w, "herbst answer");
+        var vs = MM.herbst.variants(hw, 2);
+        assert.ok(vs.length === 2 && vs[0] !== vs[1] && vs.indexOf(hw.w) < 0, "herbst variants " + hw.w + " " + vs);
+      }
       assert.ok(r && typeof r === "object", id + " makeRound");
       if (id === "wall") { assert.ok(r.steps.length > 0 && r.steps.length === Object.keys(r.hidden).length, "wall steps"); assert.ok(r.rows[r.rows.length - 1][0] <= 100, "wall top"); }
       if (id === "triangle") assert.strictEqual(r.steps.length, Object.keys(r.hidden).length, "triangle steps");
@@ -341,7 +356,7 @@ function genChecks() {
 /* ---------- esegui ---------- */
 var t0 = Date.now();
 assert.strictEqual(appNode.querySelectorAll(".game-card").length, N_GAMES, N_GAMES + " carte in home");
-assert.strictEqual(appNode.querySelectorAll(".section-label").length, 6, "6 sezioni in home");
+assert.strictEqual(appNode.querySelectorAll(".section-label").length, 7, "7 sezioni in home");
 genChecks();
 var LV = LEVELS;
 ["de", "en"].forEach(function (lang) {
