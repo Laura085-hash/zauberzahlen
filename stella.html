@@ -69,6 +69,8 @@ header h1{font-family:var(--f-display);font-weight:600;font-size:26px;margin:0;f
 .send-row{display:flex;gap:8px;align-items:flex-end}
 textarea{flex:1;min-width:0;resize:none;font:19px var(--f-body);color:var(--ink);background:var(--card);border:2px solid var(--line);border-radius:16px;padding:10px 12px;min-height:52px;max-height:140px}
 .go{background:var(--pink);color:#fff;border-color:var(--pink);min-width:84px}
+.mic{flex:none;font-size:22px;padding:10px 12px;line-height:1}
+.mic.rec{background:var(--pink);border-color:var(--pink)}
 .mic-tip{font-size:14px;color:var(--soft);margin:-2px 4px 0}
 footer{display:flex;justify-content:space-between;gap:8px;flex-wrap:wrap}
 .link{background:none;border:0;color:var(--soft);font:15px var(--f-body);text-decoration:underline;cursor:pointer;padding:4px}
@@ -122,6 +124,7 @@ details .tr b{color:var(--pink)}
 
   <div class="send-row">
     <textarea id="box" rows="1"></textarea>
+    <button class="btn mic" id="mic" aria-label="Mikrofon">🎤</button>
     <button class="btn go" id="send"></button>
   </div>
   <p class="mic-tip" id="micTip"></p>
@@ -169,6 +172,7 @@ details .tr b{color:var(--pink)}
 // dove Joy la apre dal bottone "Frag Stella" e il Browser di Samsung Kids la lascia passare (stesso dominio dei giochi).
 const AT_HOME = /(^|\.)vercel\.app$|^localhost$|^127\./.test(location.hostname);
 const API = AT_HOME ? "/api/stella" : "https://frag-stella.vercel.app/api/stella";
+const API_VOICE = AT_HOME ? "/api/voce" : "https://frag-stella.vercel.app/api/voce";
 // email ai genitori: stesso modulo pubblico del sito usato da Zauberzahlen (nessun server di posta)
 const MAIL = { endpoint: "https://lapadevadmin-lapa-v2.odoo.com/website/form/mail.mail",
                to: "laura+zauberzahlen@lapa.ch",
@@ -185,6 +189,10 @@ const T = {
     qt: {dont:"Ich verstehe das nicht.", way:"Zeig mir bitte den ganzen Weg, Schritt für Schritt, mit einem anderen Beispiel.", simpler:"Kannst du es noch einfacher erklären?", things:"Zeig es mir mit Sachen, zum Beispiel mit Äpfeln.", story:"Erklär es mir als kleine Geschichte.", answer:"Meine Antwort ist "},
     send: "Senden", ph: "Schreib oder sprich hier…",
     mic: "Tipp: Drück auf der Tastatur das Mikrofon 🎤 und sprich.",
+    micOn: "Drück auf 🎤 und sprich. Wenn du fertig bist, drück nochmal. Dann auf Senden.",
+    micRec: "Ich höre zu… Drück nochmal auf 🎤, wenn du fertig bist.",
+    micWork: "Ich schreibe auf, was du gesagt hast…",
+    micNone: "Ich habe nichts gehört. Versuch es nochmal.",
     newSheet: "Neues Blatt", parents: "Für Mama & Papa",
     pinBad: "Der Code stimmt nicht. Frag Mama oder Papa.",
     offline: "Stella kann sich gerade nicht verbinden. Ist das WLAN an?",
@@ -207,6 +215,10 @@ const T = {
     qt: {dont:"I don't understand.", way:"Please show me the whole way, step by step, with a different example.", simpler:"Can you explain it even easier?", things:"Show me with things, like apples.", story:"Explain it to me as a little story.", answer:"My answer is "},
     send: "Send", ph: "Write or talk here…",
     mic: "Tip: press the microphone 🎤 on the keyboard and talk.",
+    micOn: "Press 🎤 and talk. When you have finished, press it again. Then press Send.",
+    micRec: "I'm listening… Press 🎤 again when you have finished.",
+    micWork: "I'm writing down what you said…",
+    micNone: "I didn't hear anything. Please try again.",
     newSheet: "New sheet", parents: "For Mum & Dad",
     pinBad: "That code is not right. Ask Mum or Dad.",
     offline: "Stella can't connect right now. Is the Wi-Fi on?",
@@ -251,6 +263,7 @@ let photo = null;               // {media_type, data(base64)}
 let sid = null, started = 0, sentHash = "";
 let busy = false, ctl = null;
 let pendingAsk = null;          // domanda in attesa del codice
+let noMic = store.get("stella.nomic", "") === "1", recorder = null, micBusy = false, micTimer = 0;
 
 const t = () => T[lang];
 
@@ -278,12 +291,13 @@ function renderStatic(){
   }
   const again = document.createElement("button");
   again.className = "btn"; again.textContent = t().q.again; again.style.gridColumn = "1 / -1";
-  again.hidden = !("speechSynthesis" in window);
   again.onclick = () => { const last = [...turns].reverse().find(x => x.role === "assistant"); speak(last ? last.content : hello()); };
   q.append(again);
   $("send").textContent = t().send; $("send").disabled = busy;
   $("box").placeholder = t().ph;
-  $("micTip").textContent = t().mic;
+  const micOk = !noMic && !!(window.MediaRecorder && navigator.mediaDevices && navigator.mediaDevices.getUserMedia);
+  $("mic").hidden = !micOk; $("mic").disabled = busy || micBusy; $("mic").classList.toggle("rec", !!recorder);
+  $("micTip").textContent = !micOk ? t().mic : recorder ? t().micRec : micBusy ? t().micWork : t().micOn;
   $("newSheet").textContent = t().newSheet;
   $("parents").textContent = t().parents;
   $("photoText").textContent = photo ? t().photoHave : t().photoNone;
@@ -306,13 +320,41 @@ function renderChat(extra){
   c.scrollTop = c.scrollHeight;
 }
 
-// ---- voce del dispositivo (Chrome su Android sì; il Browser di Samsung Kids no → solo testo) ----
-function speak(text){
+// ---- la voce di Stella: dal server (api/voce, funziona anche nel Browser di Samsung Kids);
+// senza server torna alla voce del dispositivo (Chrome su Android sì; il Browser di Kids no → solo testo) ----
+const player = new Audio();
+let serverVoice = true, speakId = 0;
+// i WebView suonano solo dopo un tocco: lo stesso elemento audio viene sbloccato al primo tocco e poi riusato
+document.addEventListener("click", () => {
+  player.src = "data:audio/wav;base64,UklGRiQAAABXQVZFZm10IBAAAAABAAEARKwAAIhYAQACABAAZGF0YQAAAAA=";
+  player.play().catch(() => {});
+}, { once: true, capture: true });
+function shutUp(){ speakId++; try{ player.pause(); }catch(e){} try{ speechSynthesis.cancel(); }catch(e){} }
+async function speak(text){
+  shutUp();
+  const clean = text.replace(/[\u{1F300}-\u{1FAFF}\u{2600}-\u{27BF}\u{FE0F}]/gu, "").trim();
+  if (!clean) return;
+  const id = speakId;
+  if (serverVoice && pin){
+    try{
+      const res = await fetch(API_VOICE, { method: "POST", headers: { "content-type": "application/json", "x-stella-pin": pin },
+        body: JSON.stringify({ action: "speak", text: clean, lang }) });
+      if (res.status === 503) serverVoice = false;
+      else if (res.ok){
+        const blob = await res.blob();
+        if (id !== speakId) return;
+        player.src = URL.createObjectURL(blob);
+        await player.play();
+        return;
+      }
+    }catch(e){ if (id !== speakId) return; }
+  }
+  speakDevice(clean);
+}
+function speakDevice(clean){
   try{
     if (!("speechSynthesis" in window)) return;
     speechSynthesis.cancel();
-    const clean = text.replace(/[\u{1F300}-\u{1FAFF}\u{2600}-\u{27BF}\u{FE0F}]/gu, "").trim();
-    if (!clean) return;
     const u = new SpeechSynthesisUtterance(clean);
     u.lang = lang === "de" ? "de-DE" : "en-GB";
     const vs = speechSynthesis.getVoices();
@@ -383,6 +425,42 @@ $("camShot").onclick = () => {
   photo = { media_type: "image/jpeg", data: dataUrl.split(",")[1] };
   $("thumb").src = dataUrl; $("thumb").hidden = false; renderStatic();
 };
+
+// ---- microfono: Joy parla, il server trascrive, la frase finisce nella casella ----
+// Dove il microfono non è permesso (o non c'è la chiave) il bottone sparisce e resta la dettatura della tastiera.
+function micOff(){ noMic = true; renderStatic(); }
+async function micStart(){
+  if (!pin){ askPin(false); return; }
+  shutUp();
+  let stream;
+  try{ stream = await navigator.mediaDevices.getUserMedia({ audio: true }); }
+  catch(e){ store.set("stella.nomic", "1"); return micOff(); }
+  const chunks = [];
+  const rec = new MediaRecorder(stream);
+  rec.ondataavailable = e => { if (e.data && e.data.size) chunks.push(e.data); };
+  rec.onstop = () => {
+    stream.getTracks().forEach(tr => tr.stop());
+    clearTimeout(micTimer); recorder = null; micBusy = true; renderStatic();
+    micSend(new Blob(chunks, { type: rec.mimeType || "audio/webm" }));
+  };
+  rec.start(); recorder = rec; renderStatic();
+  micTimer = setTimeout(() => { if (recorder) recorder.stop(); }, 30000);
+}
+async function micSend(blob){
+  let heard = "";
+  try{
+    const b64 = await new Promise((ok, no) => { const r = new FileReader(); r.onload = () => ok(String(r.result).split(",")[1] || ""); r.onerror = no; r.readAsDataURL(blob); });
+    const res = await fetch(API_VOICE, { method: "POST", headers: { "content-type": "application/json", "x-stella-pin": pin },
+      body: JSON.stringify({ action: "listen", audio: b64, mime: blob.type, lang }) });
+    if (res.status === 503){ micBusy = false; return micOff(); }
+    const j = await res.json().catch(() => ({}));
+    heard = res.ok ? String(j.text || "").trim() : "";
+  }catch(e){}
+  micBusy = false; renderStatic();
+  // nella casella, non inviata: Joy vede cosa è stato capito (senza parole il trascrittore può inventare una frase)
+  if (heard){ $("box").value = heard; $("box").dispatchEvent(new Event("input")); } else renderChat(bubble("note", t().micNone));
+}
+$("mic").onclick = () => { if (recorder) recorder.stop(); else micStart(); };
 
 // ---- codice di famiglia ----
 function askPin(bad){
@@ -517,7 +595,7 @@ $("newSheet").onclick = () => {
   if (ctl) ctl.abort();
   mailSession(false);
   turns = []; notes = ""; sid = null; photo = null; $("thumb").hidden = true;
-  try{ speechSynthesis.cancel(); }catch(e){}
+  shutUp();
   busy = false; renderStatic(); renderChat(bubble("note", t().newDone));
 };
 $("parents").onclick = () => { $("panel").hidden = false; $("gateBox").hidden = false; $("log").hidden = true; $("gate").value = ""; };
