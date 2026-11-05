@@ -272,6 +272,29 @@
   }
   function topicOf(r) { return (r && (r.topic || r.mode || r.kind || r.form)) || ""; }
 
+  /* ---------- FRAG STELLA sopra l'esercizio ---------- */
+  // Laura: "il pulsante mettilo anche nell'esercizio, così chiede direttamente lì senza uscire".
+  // Il tutor (stella.html, stesso dominio) si apre in un riquadro SOPRA il gioco: l'esercizio resta com'è
+  // e Joy ci torna con un tocco. Stella riceve l'esercizio in corso (window.MM_STELLA_TASK); a Joy non viene
+  // mostrato, perché in certi giochi è la soluzione stessa (la parola da scrivere).
+  var STELLA_SUBJECT = { diktat: "deutsch", words: "deutsch", diktatfull: "deutsch", herbst: "deutsch", grammar: "other", maps: "other" };
+  function openStella(task) {
+    MM.audio.stop();
+    window.MM_STELLA_TASK = task;
+    var over = ui.el("div", { class: "stella-over" });
+    var close = ui.el("button", { class: "btn stella-close" }, ["← " + t("backToTask")]);
+    var frame = ui.el("iframe", { class: "stella-frame", title: t("askStella"), src: "stella.html?emb=1&l=" + MM.i18n.lang });
+    close.addEventListener("click", function () {
+      MM.audio.sfx("tap");
+      try { frame.contentWindow.stellaFlush(); } catch (e) {}   // l'email della chiacchierata ai genitori parte subito
+      if (over.parentNode) over.parentNode.removeChild(over);
+      window.MM_STELLA_TASK = null;
+    });
+    over.appendChild(close);
+    over.appendChild(frame);
+    document.body.appendChild(over);
+  }
+
   function runSession(id, levelOverride, startIdx) {
     var game = MM.games[id];
     if (game.lang) MM.i18n.useLang(game.lang);   // il test di geografia è in inglese: tutto in inglese
@@ -284,7 +307,11 @@
 
     ui.clear(root);
     document.title = t(game.nameKey);
-    root.appendChild(topbar(t(game.nameKey), { back: home }));
+    var askBtn = ui.el("button", { class: "ask-btn" }, ["💬 " + t("askStella")]);
+    askBtn.addEventListener("click", function () { MM.audio.sfx("tap"); openStella(stellaTask()); });
+    var bar = topbar(t(game.nameKey), { back: home, actions: [askBtn] });
+    bar.classList.add("in-game");   // titolo più piccolo: accanto c'è il bottone di Stella
+    root.appendChild(bar);
 
     var dots = ui.el("div", { class: "progress-dots" });
     for (var i = 0; i < total; i++) dots.appendChild(ui.el("i", {}));
@@ -355,6 +382,20 @@
         }
       }
     };
+
+    // cosa sta facendo Joy in questo momento, per Stella (in inglese come il resto delle sue istruzioni)
+    function stellaTask() {
+      var lines = ["Game: " + t(game.nameKey) + " – " + t(game.subKey) + " (level " + level + ")"];
+      if (promptEl.textContent) lines.push("Instruction on her screen: " + promptEl.textContent);
+      var q = describeRound(id, cur);
+      if (q) lines.push("Exercise as the app records it: " + q);
+      var k = topicOf(cur);
+      if (k) lines.push("Kind of exercise: " + k);
+      if (cur && cur.way) lines.push("Rechenweg she chose: " + t("w_" + cur.way));
+      if (wrongList.length) lines.push("Her wrong tries so far: " + wrongList.join(", "));
+      if (!hintEl.hidden && hintEl.textContent) lines.push("Hint the app showed her: " + hintEl.textContent);
+      return { text: lines.join("\n").slice(0, 700), subject: STELLA_SUBJECT[id] || "math" };
+    }
 
     function nextRound() {
       if (idx >= total) return endSession();

@@ -109,6 +109,21 @@ button { font-family: inherit; cursor: pointer; border: none; }
 .stella-card .name { font-weight: 800; font-size: 1.15rem; }
 .stella-card .sub { font-size: .9rem; opacity: .8; }
 
+/* "Frag Stella" dentro l'esercizio: bottone nella barra in alto e riquadro a tutto schermo sopra il gioco */
+.ask-btn {
+  flex: none; background: #fff8e1; color: var(--ink); border: 2px solid #f0b429; border-radius: 999px;
+  padding: 8px 12px; font-size: .9rem; font-weight: 800; white-space: nowrap; box-shadow: var(--shadow);
+}
+.ask-btn:active { transform: scale(0.95); }
+.topbar .title { min-width: 0; }
+.topbar.in-game .title { font-size: 1.3rem; line-height: 1.15; }
+.stella-over {
+  position: fixed; inset: 0; z-index: 60; background: var(--violet); display: flex; flex-direction: column;
+  padding-top: env(safe-area-inset-top, 0px);
+}
+.stella-close { align-self: flex-start; margin: 8px 12px; min-height: 44px; padding: 8px 16px; font-size: .95rem; }
+.stella-frame { flex: 1; min-height: 0; width: 100%; border: 0; background: #f6f8fc; }
+
 .games { display: flex; flex-direction: column; gap: 14px; margin-bottom: 16px; }
 .game-card {
   display: flex; align-items: center; gap: 16px; text-align: left;

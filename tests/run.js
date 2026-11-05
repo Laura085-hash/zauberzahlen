@@ -419,6 +419,26 @@ function genChecks() {
 var t0 = Date.now();
 assert.strictEqual(appNode.querySelectorAll(".game-card").length, N_GAMES, N_GAMES + " carte in home");
 assert.strictEqual(appNode.querySelectorAll(".section-label").length, 8, "8 sezioni in home");
+// il tutor: carta in home (non è un gioco) e bottone dentro l'esercizio, che apre Stella SOPRA il gioco
+assert.strictEqual(appNode.querySelectorAll(".stella-card").length, 1, "carta Frag Stella in home");
+(function () {
+  appNode.querySelectorAll(".game-card").filter(function (c) { return c.textContent.indexOf(MM.i18n.t("g_wegeminus")) >= 0; })[0].click();
+  var ask = appNode.querySelector(".ask-btn");
+  assert.ok(ask, "bottone Frag Stella nell'esercizio");
+  var stageBefore = appNode.querySelector(".stage").all().length;
+  ask.click();
+  var over = body.querySelector(".stella-over"), fr = body.querySelector(".stella-frame");
+  assert.ok(over && fr && /^stella\.html\?emb=1&l=(de|en)$/.test(fr.getAttribute("src")), "riquadro di Stella aperto");
+  var tk = global.MM_STELLA_TASK;
+  assert.ok(tk && tk.subject === "math" && tk.text.indexOf("Game: " + MM.i18n.t("g_wegeminus")) === 0 &&
+            tk.text.indexOf("Instruction on her screen: ") > 0 && tk.text.indexOf("Exercise as the app records it: ") > 0 &&
+            tk.text.length <= 700, "esercizio in corso per Stella: " + JSON.stringify(tk));
+  over.querySelector(".stella-close").click();
+  assert.ok(!body.querySelector(".stella-over") && global.MM_STELLA_TASK === null, "riquadro chiuso");
+  assert.strictEqual(appNode.querySelector(".stage").all().length, stageBefore, "l'esercizio è rimasto com'era");
+  appNode.querySelector(".topbar .icon-btn").click();   // ← torna in home
+  assert.strictEqual(appNode.querySelectorAll(".game-card").length, N_GAMES, "di nuovo in home");
+})();
 genChecks();
 var LV = LEVELS;
 ["de", "en"].forEach(function (lang) {

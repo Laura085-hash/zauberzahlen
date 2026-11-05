@@ -83,6 +83,11 @@ details .tr{margin-top:8px;font-size:16px;display:flex;flex-direction:column;gap
 details .tr b{color:var(--pink)}
 .gate{display:flex;gap:8px;flex-wrap:wrap}
 .gate input{font:19px var(--f-body);width:140px;padding:8px 10px;border-radius:12px;border:2px solid var(--line);background:var(--card);color:var(--ink)}
+.cam{background:#000;padding:0;display:flex;flex-direction:column;overflow:hidden}
+.cam video{flex:1;min-height:0;width:100%;object-fit:contain;background:#000}
+.cam-bar{display:flex;gap:10px;justify-content:space-between;align-items:center;
+  padding:12px max(16px,env(safe-area-inset-right,0px)) calc(12px + env(safe-area-inset-bottom,0px)) max(16px,env(safe-area-inset-left,0px))}
+.cam-bar .go{min-width:130px;font-size:28px;line-height:1}
 [hidden]{display:none !important}
 @media (prefers-reduced-motion: reduce){.thinking span{animation:none}}
 </style>
@@ -136,6 +141,12 @@ details .tr b{color:var(--pink)}
   </div>
 </div>
 
+<!-- fotocamera dentro la pagina: per i browser dove il selettore di file non si apre (Browser di Samsung Kids) -->
+<div class="panel cam" id="camPanel" hidden>
+  <video id="camVideo" autoplay playsinline muted></video>
+  <div class="cam-bar"><button class="btn" id="camCancel"></button><button class="btn go" id="camShot" aria-label="Foto">📸</button></div>
+</div>
+
 <!-- archivio per i genitori -->
 <div class="panel" id="panel" hidden>
   <div class="in">
@@ -166,6 +177,7 @@ const MAIL = { endpoint: "https://lapadevadmin-lapa-v2.odoo.com/website/form/mai
 const T = {
   de: {
     hello: "Hallo Joy! Ich bin Stella ⭐\nSchreib mir deine Aufgabe oder mach ein Foto von deinem Blatt. Sag mir, was schwer ist. Wir machen das zusammen, Schritt für Schritt. Wenn du willst, zeige ich dir den ganzen Weg mit einem anderen Beispiel.",
+    helloTask: "Hallo Joy! Ich bin Stella ⭐\nIch sehe, welche Aufgabe du gerade im Spiel machst. Sag mir, was schwer ist, oder drück auf einen Knopf. Die Lösung findest du selbst, ich zeige dir den Weg.",
     subjects: {math:"Mathe", spell:"English Spelling", deutsch:"Deutsch", other:"Anderes"},
     photoNone: "Noch kein Foto. Du kannst die Aufgabe auch schreiben.", photoHave: "Foto ist da. Welche Aufgabe? Sag die Nummer.",
     photoBtn: "📷 Foto", photoAgain: "📷 Neues Foto",
@@ -180,10 +192,14 @@ const T = {
     failed: "Das hat nicht geklappt. Drück nochmal auf Senden.",
     badPhoto: "Dieses Foto geht nicht. Mach bitte ein neues.",
     newDone: "Neues Blatt. Mach ein Foto oder schreib deine Frage.",
+    helloWrite: "Hallo Joy! Ich bin Stella ⭐\nSchreib mir deine Aufgabe, zum Beispiel: 63 − 28. Sag mir, was schwer ist. Wir machen das zusammen, Schritt für Schritt. Wenn du willst, zeige ich dir den ganzen Weg mit einem anderen Beispiel.",
+    noCam: "Hier kann ich leider kein Foto machen. Schreib mir die Aufgabe unten in das Feld.",
+    camCancel: "Abbrechen",
     back: "Zurück zu den Spielen"
   },
   en: {
     hello: "Hi Joy! I'm Stella ⭐\nWrite your task here or take a photo of your sheet. Tell me what is hard. We'll do it together, step by step. If you like, I can show you the whole way with a different example.",
+    helloTask: "Hi Joy! I'm Stella ⭐\nI can see which task you are doing in the game. Tell me what is hard, or press a button. You will find the answer yourself, I'll show you the way.",
     subjects: {math:"Maths", spell:"English Spelling", deutsch:"Deutsch", other:"Other"},
     photoNone: "No photo yet. You can also write the task.", photoHave: "Photo is here. Which task? Tell me the number.",
     photoBtn: "📷 Photo", photoAgain: "📷 New photo",
@@ -198,6 +214,9 @@ const T = {
     failed: "That didn't work. Press Send again.",
     badPhoto: "This photo doesn't work. Please take a new one.",
     newDone: "New sheet. Take a photo or write your question.",
+    helloWrite: "Hi Joy! I'm Stella ⭐\nWrite your task here, for example: 63 − 28. Tell me what is hard. We'll do it together, step by step. If you like, I can show you the whole way with a different example.",
+    noCam: "Sorry, I can't take a photo here. Write the task in the box below.",
+    camCancel: "Cancel",
     back: "Back to the games"
   }
 };
@@ -213,6 +232,18 @@ const store = {
 const fromGames = new URLSearchParams(location.search).get("l");
 let lang = store.get("stella.lang", fromGames === "en" ? "en" : "de");
 let subject = store.get("stella.subject", "math");
+// Aperta DENTRO un esercizio di Zauberzahlen (riquadro sopra il gioco, ?emb=1): il gioco lascia l'esercizio in corso
+// in window.parent.MM_STELLA_TASK = {text, subject}. Va solo a Stella: Joy non lo vede scritto, perché in certi
+// giochi è la soluzione stessa (la parola da scrivere). Qui valgono la lingua e la materia del gioco.
+const EMB = new URLSearchParams(location.search).get("emb") === "1";
+let task = "";
+if (EMB){
+  try{
+    const tk = window.parent.MM_STELLA_TASK;
+    if (tk && typeof tk.text === "string"){ task = tk.text.slice(0, 700); if (T.de.subjects[tk.subject]) subject = tk.subject; }
+  }catch(e){}
+  if (fromGames === "de" || fromGames === "en") lang = fromGames;
+}
 let pin = store.get("stella.pin", "");
 let turns = [];                 // {role:"user"|"assistant", content}
 let notes = "";                 // le note di Stella per sé stessa (cosa sa Joy, strade provate): tornano al server a ogni turno
@@ -248,7 +279,7 @@ function renderStatic(){
   const again = document.createElement("button");
   again.className = "btn"; again.textContent = t().q.again; again.style.gridColumn = "1 / -1";
   again.hidden = !("speechSynthesis" in window);
-  again.onclick = () => { const last = [...turns].reverse().find(x => x.role === "assistant"); speak(last ? last.content : t().hello); };
+  again.onclick = () => { const last = [...turns].reverse().find(x => x.role === "assistant"); speak(last ? last.content : hello()); };
   q.append(again);
   $("send").textContent = t().send; $("send").disabled = busy;
   $("box").placeholder = t().ph;
@@ -257,15 +288,19 @@ function renderStatic(){
   $("parents").textContent = t().parents;
   $("photoText").textContent = photo ? t().photoHave : t().photoNone;
   $("photoBtn").textContent = photo ? t().photoAgain : t().photoBtn;
-  $("back").hidden = AT_HOME; $("back").setAttribute("aria-label", t().back);
+  $("back").hidden = AT_HOME || EMB; $("back").setAttribute("aria-label", t().back);   // dentro il gioco si chiude dal riquadro
+  if (EMB){ $("subjects").hidden = true; document.querySelector("footer").hidden = true; }
+  $("photoBox").hidden = EMB || noCam;   // dentro il gioco la foto non serve; dove la fotocamera non è permessa, niente bottone morto
+  $("camCancel").textContent = t().camCancel;
   renderChat();
 }
 function setLang(l){ lang = l; store.set("stella.lang", l); renderStatic(); }
 
 function bubble(cls, text){ const d = document.createElement("div"); d.className = "msg " + cls; d.textContent = text; return d; }
+function hello(){ return task ? t().helloTask : noCam ? t().helloWrite : t().hello; }
 function renderChat(extra){
   const c = $("chat"); c.textContent = "";
-  c.append(bubble("stella", t().hello));
+  c.append(bubble("stella", hello()));
   for (const x of turns) c.append(bubble(x.role === "user" ? "joy" : "stella", x.content));
   if (extra) c.append(extra);
   c.scrollTop = c.scrollHeight;
@@ -309,6 +344,46 @@ function loadPhoto(file){
   });
 }
 
+// ---- foto dentro la pagina (fotocamera via getUserMedia) ----
+// Il Browser di Samsung Kids è un WebView senza selettore di file: toccando "Foto" non succedeva niente
+// (Laura, 05/11/2026: "non si può scattare la foto"). Nei WebView il bottone apre quindi la fotocamera dentro
+// la pagina; se il browser non la concede, il riquadro Foto sparisce (per sempre su quel telefono) e Joy scrive.
+const WEBVIEW = /; wv\)/.test(navigator.userAgent);
+let noCam = store.get("stella.nocam", "") === "1";
+let camStream = null;
+function camStop(){
+  if (camStream){ camStream.getTracks().forEach(tr => tr.stop()); camStream = null; }
+  $("camVideo").srcObject = null; $("camPanel").hidden = true;
+}
+function camFail(){
+  camStop(); noCam = true; store.set("stella.nocam", "1");
+  renderStatic(); renderChat(bubble("note", t().noCam));
+}
+async function camOpen(){
+  if (!navigator.mediaDevices || !navigator.mediaDevices.getUserMedia) return camFail();
+  let gaveUp = false;
+  const timer = setTimeout(() => { gaveUp = true; camFail(); }, 10000);   // nessuna risposta dal browser = non permessa
+  try{
+    const s = await navigator.mediaDevices.getUserMedia({ video: { facingMode: "environment", width: { ideal: 1920 } }, audio: false });
+    clearTimeout(timer);
+    if (gaveUp){ s.getTracks().forEach(tr => tr.stop()); return; }
+    camStream = s; $("camVideo").srcObject = s; $("camPanel").hidden = false;
+  }catch(e){ clearTimeout(timer); if (!gaveUp) camFail(); }
+}
+$("photoBtn").addEventListener("click", e => { if (WEBVIEW){ e.preventDefault(); camOpen(); } });
+$("camCancel").onclick = camStop;
+$("camShot").onclick = () => {
+  const v = $("camVideo"); if (!v.videoWidth) return;
+  const r = Math.min(1, 1400 / Math.max(v.videoWidth, v.videoHeight));
+  const c = document.createElement("canvas");
+  c.width = Math.round(v.videoWidth * r); c.height = Math.round(v.videoHeight * r);
+  c.getContext("2d").drawImage(v, 0, 0, c.width, c.height);
+  const dataUrl = c.toDataURL("image/jpeg", 0.82);
+  camStop();
+  photo = { media_type: "image/jpeg", data: dataUrl.split(",")[1] };
+  $("thumb").src = dataUrl; $("thumb").hidden = false; renderStatic();
+};
+
 // ---- codice di famiglia ----
 function askPin(bad){
   $("pinText").textContent = bad ? t().pinBad : (lang === "de" ? "Stella braucht einmal den Familien-Code." : "Stella needs the family code once.");
@@ -335,7 +410,7 @@ async function ask(text){
   try{
     const res = await fetch(API, { method: "POST", signal: ctl.signal,
       headers: { "content-type": "application/json", "x-stella-pin": pin },
-      body: JSON.stringify({ lang, subject, turns: turns.slice(-16), image: photo, notes }) });
+      body: JSON.stringify({ lang, subject, turns: turns.slice(-16), image: photo, notes, task }) });
     if (res.status === 401){ turns.pop(); busy = false; pin = ""; store.set("stella.pin", ""); pendingAsk = text; renderStatic(); askPin(true); return; }
     const j = await res.json().catch(() => ({}));
     if (!res.ok || !j.reply){
@@ -360,7 +435,7 @@ function sessions(){ return store.json("stella.sessions", []); }
 function save(){
   if (!sid) return;
   const list = sessions().filter(s => s.id !== sid);
-  list.push({ id: sid, started, updated: Date.now(), lang, subject, photo: !!photo, notes,
+  list.push({ id: sid, started, updated: Date.now(), lang, subject, photo: !!photo, notes, task,
               turns: turns.map(x => ({ r: x.role === "user" ? "joy" : "stella", t: x.content.slice(0, 2000) })) });
   while (list.length > 40) list.shift();
   store.set("stella.sessions", JSON.stringify(list));
@@ -374,6 +449,7 @@ function mailSession(useBeacon){
   const n = turns.filter(x => x.role === "user").length;
   const subj = "[Frag Stella] Joy · " + two(d.getDate()) + "." + two(d.getMonth() + 1) + "." + d.getFullYear() + " · " + T.de.subjects[subject] + " · " + n + " domande";
   const lines = ["Sessione con Stella — " + d.toLocaleString("it-CH") + " · " + T.de.subjects[subject] + " · " + (lang === "de" ? "tedesco" : "inglese") + (photo ? " · con foto del foglio" : ""), ""];
+  if (task) lines.push("APERTA DENTRO UN GIOCO DI ZAUBERZAHLEN, su questo esercizio: " + task.replace(/\n/g, " · "), "");
   for (const x of turns) lines.push((x.role === "user" ? "JOY: " : "STELLA: ") + x.content, "");
   if (notes) lines.push("APPUNTI DI STELLA (cosa sa Joy, strade provate, quanto era bloccata): " + notes, "");
   lines.push("Dove si è fermata = guarda le domande di Joy; Stella non dà mai la soluzione.");
@@ -385,6 +461,7 @@ function mailSession(useBeacon){
   if (!ok){ try{ fetch(MAIL.endpoint, { method: "POST", body: fd, mode: "no-cors", keepalive: true }).catch(() => {}); ok = true; }catch(e){} }
   if (ok) sentHash = h;
 }
+window.stellaFlush = () => mailSession(false);   // il riquadro di Zauberzahlen lo chiama quando Joy torna all'esercizio
 document.addEventListener("visibilitychange", () => { if (document.visibilityState === "hidden") mailSession(true); });
 window.addEventListener("pagehide", () => mailSession(true));
 
@@ -401,6 +478,11 @@ function showLog(){
     sum.textContent = `${when} · ${T.de.subjects[s.subject] || ""} · ${n} domande${s.photo ? " · con foto" : ""}`;
     det.append(sum);
     const tr = document.createElement("div"); tr.className = "tr";
+    if (s.task){
+      const p = document.createElement("div"); p.style.color = "var(--soft)";
+      const b = document.createElement("b"); b.textContent = "Dentro il gioco: ";
+      p.append(b, document.createTextNode(String(s.task).replace(/\n/g, " · "))); tr.append(p);
+    }
     if (s.notes){
       const p = document.createElement("div"); p.style.color = "var(--soft)";
       const b = document.createElement("b"); b.textContent = "Appunti di Stella: ";
