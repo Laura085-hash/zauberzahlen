@@ -97,6 +97,18 @@ button { font-family: inherit; cursor: pointer; border: none; }
 .collection .label { font-size: .85rem; opacity: .9; width: 100%; }
 .collection .sticker { font-size: 1.6rem; }
 
+/* il tutor "Frag Stella": una carta diversa dai giochi (bordo oro), subito sotto la mascotte */
+.stella-card {
+  display: flex; align-items: center; gap: 16px; text-align: left; width: 100%;
+  background: #fff8e1; color: var(--ink); border: 3px solid #f0b429; border-radius: var(--r);
+  padding: 14px 16px; box-shadow: var(--shadow); margin: 0 0 14px;
+}
+.stella-card:active { transform: scale(0.98); }
+.stella-card .emoji { font-size: 2.4rem; line-height: 1; }
+.stella-card .grow { flex: 1; min-width: 0; }
+.stella-card .name { font-weight: 800; font-size: 1.15rem; }
+.stella-card .sub { font-size: .9rem; opacity: .8; }
+
 .games { display: flex; flex-direction: column; gap: 14px; margin-bottom: 16px; }
 .game-card {
   display: flex; align-items: center; gap: 16px; text-align: left;

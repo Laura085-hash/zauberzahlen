@@ -64,6 +64,21 @@
     ]);
     root.appendChild(hero);
 
+    // il tutor: stella.html è la pagina di "Frag Stella" (progetto frag-stella), stesso dominio dei giochi
+    // così si apre anche nel Browser di Samsung Kids; non è una .game-card (non è un gioco, niente stelle)
+    var ask = ui.el("button", { class: "stella-card" }, [
+      ui.el("div", { class: "emoji" }, ["💬"]),
+      ui.el("div", { class: "grow" }, [
+        ui.el("div", { class: "name" }, [t("askStella")]),
+        ui.el("div", { class: "sub" }, [t("askStella_sub")])
+      ])
+    ]);
+    ask.addEventListener("click", function () {
+      MM.audio.sfx("tap");
+      window.location.href = "stella.html?l=" + MM.i18n.lang;
+    });
+    root.appendChild(ask);
+
     // collezione
     var col = MM.storage.collection();
     var keys = Object.keys(col);

@@ -1,0 +1,450 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="google" content="notranslate">
+<meta name="robots" content="noindex, nofollow">
+<meta name="theme-color" content="#d9467f">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-title" content="Frag Stella">
+<title>Frag Stella</title>
+<link rel="manifest" href="manifest.webmanifest">
+<link rel="icon" href="assets/icon.svg" type="image/svg+xml">
+<link rel="apple-touch-icon" href="assets/icon.svg">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Andika:wght@400;700&family=Fredoka:wght@500;600&display=swap">
+<style>
+/* Un solo schermo: Stella in alto, la chat in mezzo, i bottoni grandi sotto il pollice. Sfondo a quadretti come il quaderno. */
+:root{
+  --paper:#f6f8fc; --grid:#dde5f2; --ink:#2a2547; --soft:#615c80;
+  --pink:#d9467f; --pink-bg:#fde7f0; --mint:#1f8a69; --mint-bg:#e2f5ee;
+  --gold:#f0b429; --card:#ffffff; --line:#cfd8e8;
+  --f-display:"Fredoka", "Trebuchet MS", system-ui, sans-serif;
+  --f-body:"Andika", "Comic Sans MS", system-ui, sans-serif;
+}
+@media (prefers-color-scheme: dark){:root:not([data-theme="light"]){
+  --paper:#1a1730; --grid:#272344; --ink:#f1eefb; --soft:#b5afd3;
+  --pink:#ff7fb0; --pink-bg:#3a2340; --mint:#5fd3a8; --mint-bg:#173a31;
+  --gold:#ffcc4d; --card:#24203f; --line:#3a3560; color-scheme:dark}}
+:root[data-theme="dark"]{
+  --paper:#1a1730; --grid:#272344; --ink:#f1eefb; --soft:#b5afd3;
+  --pink:#ff7fb0; --pink-bg:#3a2340; --mint:#5fd3a8; --mint-bg:#173a31;
+  --gold:#ffcc4d; --card:#24203f; --line:#3a3560; color-scheme:dark}
+*{box-sizing:border-box}
+html,body{height:100%;margin:0}
+body{background-color:var(--paper);
+  background-image:linear-gradient(var(--grid) 1px,transparent 1px),linear-gradient(90deg,var(--grid) 1px,transparent 1px);
+  background-size:22px 22px;color:var(--ink);font-family:var(--f-body);font-size:19px;line-height:1.45;
+  padding-left:max(16px,env(safe-area-inset-left,0px));padding-right:max(16px,env(safe-area-inset-right,0px))}
+.app{max-width:640px;margin:0 auto;height:100%;display:flex;flex-direction:column;gap:10px;padding-block:calc(10px + env(safe-area-inset-top,0px)) calc(10px + env(safe-area-inset-bottom,0px))}
+header{display:flex;align-items:center;gap:10px}
+header h1{font-family:var(--f-display);font-weight:600;font-size:26px;margin:0;flex:1;letter-spacing:.2px}
+.back{flex:none;width:46px;height:46px;border:2px solid var(--line);border-radius:14px;background:var(--card);color:var(--ink);
+  font:600 24px var(--f-display);display:flex;align-items:center;justify-content:center;text-decoration:none}
+.star{width:46px;height:46px;flex:none}
+.lang{display:flex;border:2px solid var(--line);border-radius:999px;overflow:hidden;background:var(--card)}
+.lang button{border:0;background:none;font:600 15px var(--f-display);color:var(--soft);padding:6px 11px;cursor:pointer}
+.lang button[aria-pressed="true"]{background:var(--pink);color:#fff}
+.subjects{display:flex;gap:8px;flex-wrap:wrap}
+.chip{border:2px solid var(--line);background:var(--card);color:var(--ink);border-radius:999px;padding:6px 13px;font:600 16px var(--f-display);cursor:pointer}
+.chip[aria-pressed="true"]{border-color:var(--pink);background:var(--pink-bg)}
+.chat{flex:1;min-height:0;overflow-y:auto;display:flex;flex-direction:column;gap:10px;padding:4px 2px}
+.msg{max-width:88%;padding:11px 14px;border-radius:18px;white-space:pre-wrap;overflow-wrap:anywhere;min-width:0}
+.stella{align-self:flex-start;background:var(--card);border:2px solid var(--line);border-bottom-left-radius:6px}
+.joy{align-self:flex-end;background:var(--mint-bg);border:2px solid transparent;border-bottom-right-radius:6px}
+.note{align-self:center;font-size:15px;color:var(--soft);text-align:center}
+.thinking{color:var(--soft)}
+.thinking span{display:inline-block;animation:tw 1.2s infinite}
+.thinking span:nth-child(2){animation-delay:.2s}.thinking span:nth-child(3){animation-delay:.4s}
+@keyframes tw{0%,100%{opacity:.25}50%{opacity:1}}
+.photo{display:flex;align-items:center;gap:10px;background:var(--card);border:2px dashed var(--line);border-radius:16px;padding:8px 10px}
+.photo img{width:56px;height:56px;object-fit:cover;border-radius:10px}
+.photo .t{flex:1;font-size:16px;color:var(--soft);min-width:0}
+.btn{border:2px solid var(--line);border-radius:16px;font:600 17px var(--f-display);padding:12px 14px;cursor:pointer;color:var(--ink);background:var(--card)}
+.btn:focus-visible,.chip:focus-visible,.lang button:focus-visible,textarea:focus-visible,input:focus-visible{outline:3px solid var(--gold);outline-offset:2px}
+.btn:disabled{opacity:.5;cursor:default}
+.quick{display:grid;grid-template-columns:1fr 1fr;gap:8px}
+.quick .btn{text-align:left;line-height:1.2}
+.send-row{display:flex;gap:8px;align-items:flex-end}
+textarea{flex:1;min-width:0;resize:none;font:19px var(--f-body);color:var(--ink);background:var(--card);border:2px solid var(--line);border-radius:16px;padding:10px 12px;min-height:52px;max-height:140px}
+.go{background:var(--pink);color:#fff;border-color:var(--pink);min-width:84px}
+.mic-tip{font-size:14px;color:var(--soft);margin:-2px 4px 0}
+footer{display:flex;justify-content:space-between;gap:8px;flex-wrap:wrap}
+.link{background:none;border:0;color:var(--soft);font:15px var(--f-body);text-decoration:underline;cursor:pointer;padding:4px}
+.panel{position:fixed;inset:0;background:var(--paper);overflow-y:auto;z-index:5;
+  padding:calc(16px + env(safe-area-inset-top,0px)) max(16px,env(safe-area-inset-right,0px)) calc(16px + env(safe-area-inset-bottom,0px)) max(16px,env(safe-area-inset-left,0px))}
+.panel .in{max-width:640px;margin:0 auto;display:flex;flex-direction:column;gap:12px}
+.panel h2{font-family:var(--f-display);margin:0;font-size:24px}
+.panel p{margin:0}
+details{background:var(--card);border:2px solid var(--line);border-radius:14px;padding:10px 12px}
+summary{cursor:pointer;font-weight:700}
+details .tr{margin-top:8px;font-size:16px;display:flex;flex-direction:column;gap:6px}
+details .tr b{color:var(--pink)}
+.gate{display:flex;gap:8px;flex-wrap:wrap}
+.gate input{font:19px var(--f-body);width:140px;padding:8px 10px;border-radius:12px;border:2px solid var(--line);background:var(--card);color:var(--ink)}
+[hidden]{display:none !important}
+@media (prefers-reduced-motion: reduce){.thinking span{animation:none}}
+</style>
+</head>
+<body>
+<div class="app">
+  <header>
+    <a class="back" id="back" href="./" hidden>←</a>
+    <svg class="star" viewBox="0 0 100 100" aria-hidden="true">
+      <path d="M50 6l12.6 27.4 29.9 3.4-22.3 20.3 6.2 29.5L50 71.6 23.6 86.6l6.2-29.5L7.5 36.8l29.9-3.4z" fill="var(--gold)" stroke="var(--ink)" stroke-width="3" stroke-linejoin="round"/>
+      <circle cx="41" cy="48" r="4" fill="var(--ink)"/><circle cx="59" cy="48" r="4" fill="var(--ink)"/>
+      <path d="M42 59q8 7 16 0" fill="none" stroke="var(--ink)" stroke-width="3.5" stroke-linecap="round"/>
+      <circle cx="34" cy="57" r="4" fill="var(--pink)" opacity=".55"/><circle cx="66" cy="57" r="4" fill="var(--pink)" opacity=".55"/>
+    </svg>
+    <h1 id="title">Frag Stella</h1>
+    <div class="lang" role="group" aria-label="Sprache">
+      <button id="l-de" aria-pressed="true">DE</button><button id="l-en" aria-pressed="false">EN</button>
+    </div>
+  </header>
+
+  <div class="subjects" id="subjects"></div>
+  <div class="chat" id="chat" aria-live="polite"></div>
+
+  <div class="photo" id="photoBox">
+    <img id="thumb" alt="" hidden>
+    <div class="t" id="photoText"></div>
+    <label class="btn" for="photo" id="photoBtn"></label>
+    <input type="file" id="photo" accept="image/*" capture="environment" hidden>
+  </div>
+
+  <div class="quick" id="quick"></div>
+
+  <div class="send-row">
+    <textarea id="box" rows="1"></textarea>
+    <button class="btn go" id="send"></button>
+  </div>
+  <p class="mic-tip" id="micTip"></p>
+
+  <footer>
+    <button class="link" id="newSheet"></button>
+    <button class="link" id="parents"></button>
+  </footer>
+</div>
+
+<!-- codice di famiglia: protegge la chiave API sul server -->
+<div class="panel" id="pinPanel" hidden>
+  <div class="in">
+    <h2 id="pinTitle">Code von Mama oder Papa</h2>
+    <p id="pinText">Stella braucht einmal den Familien-Code.</p>
+    <div class="gate"><input id="pin" inputmode="numeric" autocomplete="off" aria-label="Code"><button class="btn" id="pinGo">OK</button></div>
+  </div>
+</div>
+
+<!-- archivio per i genitori -->
+<div class="panel" id="panel" hidden>
+  <div class="in">
+    <h2>Für Mama &amp; Papa</h2>
+    <div id="gateBox">
+      <p>Kleine Rechnung für Erwachsene: <b>13 × 7 = ?</b></p>
+      <div class="gate"><input id="gate" inputmode="numeric" autocomplete="off" aria-label="Ergebnis"><button class="btn" id="gateGo">OK</button><button class="btn" id="close1">Zurück</button></div>
+    </div>
+    <div id="log" hidden>
+      <p style="color:var(--soft)">Qui vedete cosa ha chiesto Joy e come Stella l'ha guidata. Stella non dà mai la soluzione: spiega il metodo e torna alla base quando serve. Ogni sessione arriva anche per email.</p>
+      <div id="sessions" style="display:flex;flex-direction:column;gap:10px;margin-top:10px"></div>
+      <p><button class="btn" id="close2">Zurück zu Stella</button></p>
+    </div>
+  </div>
+</div>
+
+<script>
+(() => {
+// La stessa pagina gira in due posti: su Vercel (accanto alla funzione) e dentro Zauberzahlen (GitHub Pages),
+// dove Joy la apre dal bottone "Frag Stella" e il Browser di Samsung Kids la lascia passare (stesso dominio dei giochi).
+const AT_HOME = /(^|\.)vercel\.app$|^localhost$|^127\./.test(location.hostname);
+const API = AT_HOME ? "/api/stella" : "https://frag-stella.vercel.app/api/stella";
+// email ai genitori: stesso modulo pubblico del sito usato da Zauberzahlen (nessun server di posta)
+const MAIL = { endpoint: "https://lapadevadmin-lapa-v2.odoo.com/website/form/mail.mail",
+               to: "laura+zauberzahlen@lapa.ch",
+               signature: "fe4468704a28feca1537a2d2546f95575f28511355abe2d73c761b86e4ebeb1e" };
+
+const T = {
+  de: {
+    hello: "Hallo Joy! Ich bin Stella ⭐\nSchreib mir deine Aufgabe oder mach ein Foto von deinem Blatt. Sag mir, was schwer ist. Wir machen das zusammen, Schritt für Schritt. Wenn du willst, zeige ich dir den ganzen Weg mit einem anderen Beispiel.",
+    subjects: {math:"Mathe", spell:"English Spelling", deutsch:"Deutsch", other:"Anderes"},
+    photoNone: "Noch kein Foto. Du kannst die Aufgabe auch schreiben.", photoHave: "Foto ist da. Welche Aufgabe? Sag die Nummer.",
+    photoBtn: "📷 Foto", photoAgain: "📷 Neues Foto",
+    q: {dont:"🤔 Ich verstehe das nicht", way:"🛤️ Zeig mir den Weg", simpler:"🐢 Noch einfacher bitte", things:"🍎 Zeig es mit Sachen", story:"📖 Als Geschichte", answer:"✏️ Meine Antwort ist…", again:"🔊 Nochmal hören"},
+    qt: {dont:"Ich verstehe das nicht.", way:"Zeig mir bitte den ganzen Weg, Schritt für Schritt, mit einem anderen Beispiel.", simpler:"Kannst du es noch einfacher erklären?", things:"Zeig es mir mit Sachen, zum Beispiel mit Äpfeln.", story:"Erklär es mir als kleine Geschichte.", answer:"Meine Antwort ist "},
+    send: "Senden", ph: "Schreib oder sprich hier…",
+    mic: "Tipp: Drück auf der Tastatur das Mikrofon 🎤 und sprich.",
+    newSheet: "Neues Blatt", parents: "Für Mama & Papa",
+    pinBad: "Der Code stimmt nicht. Frag Mama oder Papa.",
+    offline: "Stella kann sich gerade nicht verbinden. Ist das WLAN an?",
+    tired: "Stella macht kurz Pause. Versuch es gleich nochmal.",
+    failed: "Das hat nicht geklappt. Drück nochmal auf Senden.",
+    badPhoto: "Dieses Foto geht nicht. Mach bitte ein neues.",
+    newDone: "Neues Blatt. Mach ein Foto oder schreib deine Frage.",
+    back: "Zurück zu den Spielen"
+  },
+  en: {
+    hello: "Hi Joy! I'm Stella ⭐\nWrite your task here or take a photo of your sheet. Tell me what is hard. We'll do it together, step by step. If you like, I can show you the whole way with a different example.",
+    subjects: {math:"Maths", spell:"English Spelling", deutsch:"Deutsch", other:"Other"},
+    photoNone: "No photo yet. You can also write the task.", photoHave: "Photo is here. Which task? Tell me the number.",
+    photoBtn: "📷 Photo", photoAgain: "📷 New photo",
+    q: {dont:"🤔 I don't understand", way:"🛤️ Show me the way", simpler:"🐢 Even easier please", things:"🍎 Show me with things", story:"📖 As a story", answer:"✏️ My answer is…", again:"🔊 Hear it again"},
+    qt: {dont:"I don't understand.", way:"Please show me the whole way, step by step, with a different example.", simpler:"Can you explain it even easier?", things:"Show me with things, like apples.", story:"Explain it to me as a little story.", answer:"My answer is "},
+    send: "Send", ph: "Write or talk here…",
+    mic: "Tip: press the microphone 🎤 on the keyboard and talk.",
+    newSheet: "New sheet", parents: "For Mum & Dad",
+    pinBad: "That code is not right. Ask Mum or Dad.",
+    offline: "Stella can't connect right now. Is the Wi-Fi on?",
+    tired: "Stella is taking a little break. Try again in a moment.",
+    failed: "That didn't work. Press Send again.",
+    badPhoto: "This photo doesn't work. Please take a new one.",
+    newDone: "New sheet. Take a photo or write your question.",
+    back: "Back to the games"
+  }
+};
+
+const $ = id => document.getElementById(id);
+const store = {
+  get(k, d){ try{ const v = localStorage.getItem(k); return v == null ? d : v; }catch(e){ return d; } },
+  set(k, v){ try{ localStorage.setItem(k, v); }catch(e){} },
+  json(k, d){ try{ const v = localStorage.getItem(k); return v ? JSON.parse(v) : d; }catch(e){ return d; } }
+};
+
+// dal bottone dei giochi arriva ?l=de|en (la lingua di Zauberzahlen): vale finché Joy non ne sceglie una qui
+const fromGames = new URLSearchParams(location.search).get("l");
+let lang = store.get("stella.lang", fromGames === "en" ? "en" : "de");
+let subject = store.get("stella.subject", "math");
+let pin = store.get("stella.pin", "");
+let turns = [];                 // {role:"user"|"assistant", content}
+let notes = "";                 // le note di Stella per sé stessa (cosa sa Joy, strade provate): tornano al server a ogni turno
+let photo = null;               // {media_type, data(base64)}
+let sid = null, started = 0, sentHash = "";
+let busy = false, ctl = null;
+let pendingAsk = null;          // domanda in attesa del codice
+
+const t = () => T[lang];
+
+function renderStatic(){
+  document.documentElement.lang = lang;
+  $("l-de").setAttribute("aria-pressed", lang === "de");
+  $("l-en").setAttribute("aria-pressed", lang === "en");
+  const s = $("subjects"); s.textContent = "";
+  for (const [k, label] of Object.entries(t().subjects)){
+    const b = document.createElement("button");
+    b.className = "chip"; b.textContent = label; b.setAttribute("aria-pressed", k === subject);
+    b.onclick = () => { subject = k; store.set("stella.subject", k);
+      if (k === "spell") setLang("en"); else if (k === "deutsch") setLang("de"); else renderStatic(); };
+    s.append(b);
+  }
+  const q = $("quick"); q.textContent = "";
+  for (const k of ["dont", "way", "simpler", "things", "story", "answer"]){
+    const b = document.createElement("button");
+    b.className = "btn"; b.textContent = t().q[k]; b.disabled = busy;
+    b.onclick = () => {
+      if (k === "answer"){ $("box").value = t().qt.answer; $("box").focus(); return; }
+      ask(t().qt[k]);
+    };
+    q.append(b);
+  }
+  const again = document.createElement("button");
+  again.className = "btn"; again.textContent = t().q.again; again.style.gridColumn = "1 / -1";
+  again.hidden = !("speechSynthesis" in window);
+  again.onclick = () => { const last = [...turns].reverse().find(x => x.role === "assistant"); speak(last ? last.content : t().hello); };
+  q.append(again);
+  $("send").textContent = t().send; $("send").disabled = busy;
+  $("box").placeholder = t().ph;
+  $("micTip").textContent = t().mic;
+  $("newSheet").textContent = t().newSheet;
+  $("parents").textContent = t().parents;
+  $("photoText").textContent = photo ? t().photoHave : t().photoNone;
+  $("photoBtn").textContent = photo ? t().photoAgain : t().photoBtn;
+  $("back").hidden = AT_HOME; $("back").setAttribute("aria-label", t().back);
+  renderChat();
+}
+function setLang(l){ lang = l; store.set("stella.lang", l); renderStatic(); }
+
+function bubble(cls, text){ const d = document.createElement("div"); d.className = "msg " + cls; d.textContent = text; return d; }
+function renderChat(extra){
+  const c = $("chat"); c.textContent = "";
+  c.append(bubble("stella", t().hello));
+  for (const x of turns) c.append(bubble(x.role === "user" ? "joy" : "stella", x.content));
+  if (extra) c.append(extra);
+  c.scrollTop = c.scrollHeight;
+}
+
+// ---- voce del dispositivo (Chrome su Android sì; il Browser di Samsung Kids no → solo testo) ----
+function speak(text){
+  try{
+    if (!("speechSynthesis" in window)) return;
+    speechSynthesis.cancel();
+    const clean = text.replace(/[\u{1F300}-\u{1FAFF}\u{2600}-\u{27BF}\u{FE0F}]/gu, "").trim();
+    if (!clean) return;
+    const u = new SpeechSynthesisUtterance(clean);
+    u.lang = lang === "de" ? "de-DE" : "en-GB";
+    const vs = speechSynthesis.getVoices();
+    const v = vs.find(v => v.lang && v.lang.toLowerCase().startsWith(lang === "de" ? "de" : "en-gb")) || vs.find(v => v.lang && v.lang.toLowerCase().startsWith(lang));
+    if (v) u.voice = v;
+    u.rate = 0.92; u.pitch = 1.1;
+    speechSynthesis.speak(u);
+  }catch(e){}
+}
+
+// ---- foto: ridotta a max 1400 px e jpeg, così la richiesta resta piccola ----
+function loadPhoto(file){
+  return new Promise((resolve, reject) => {
+    const url = URL.createObjectURL(file);
+    const img = new Image();
+    img.onload = () => {
+      try{
+        const max = 1400, r = Math.min(1, max / Math.max(img.width, img.height));
+        const c = document.createElement("canvas");
+        c.width = Math.round(img.width * r); c.height = Math.round(img.height * r);
+        c.getContext("2d").drawImage(img, 0, 0, c.width, c.height);
+        const dataUrl = c.toDataURL("image/jpeg", 0.82);
+        URL.revokeObjectURL(url);
+        resolve({ dataUrl, data: dataUrl.split(",")[1] });
+      }catch(e){ reject(e); }
+    };
+    img.onerror = () => { URL.revokeObjectURL(url); reject(new Error("img")); };
+    img.src = url;
+  });
+}
+
+// ---- codice di famiglia ----
+function askPin(bad){
+  $("pinText").textContent = bad ? t().pinBad : (lang === "de" ? "Stella braucht einmal den Familien-Code." : "Stella needs the family code once.");
+  $("pin").value = ""; $("pinPanel").hidden = false; setTimeout(() => $("pin").focus(), 50);
+}
+$("pinGo").onclick = () => {
+  const v = $("pin").value.trim(); if (!v) return;
+  pin = v; store.set("stella.pin", v); $("pinPanel").hidden = true;
+  if (pendingAsk){ const q = pendingAsk; pendingAsk = null; ask(q); }
+};
+$("pin").addEventListener("keydown", e => { if (e.key === "Enter") $("pinGo").click(); });
+
+// ---- la domanda a Stella ----
+async function ask(text){
+  text = (text || "").trim();
+  if (!text || busy) return;
+  if (!pin){ pendingAsk = text; askPin(false); return; }
+  if (!sid){ sid = Date.now().toString(36); started = Date.now(); sentHash = ""; }
+  turns.push({ role: "user", content: text });
+  busy = true; $("box").value = ""; $("box").style.height = "auto"; renderStatic();
+  const live = bubble("stella thinking", ""); live.innerHTML = "<span>⭐</span><span>⭐</span><span>⭐</span>";
+  renderChat(live);
+  ctl = new AbortController();
+  try{
+    const res = await fetch(API, { method: "POST", signal: ctl.signal,
+      headers: { "content-type": "application/json", "x-stella-pin": pin },
+      body: JSON.stringify({ lang, subject, turns: turns.slice(-16), image: photo, notes }) });
+    if (res.status === 401){ turns.pop(); busy = false; pin = ""; store.set("stella.pin", ""); pendingAsk = text; renderStatic(); askPin(true); return; }
+    const j = await res.json().catch(() => ({}));
+    if (!res.ok || !j.reply){
+      turns.pop(); busy = false; renderStatic();
+      const msg = res.status === 429 ? t().tired
+        : (j.error === "image_rejected" || j.error === "image_too_big") ? (photo = null, t().badPhoto)
+        : t().failed;
+      renderStatic(); renderChat(bubble("note", msg)); return;
+    }
+    turns.push({ role: "assistant", content: j.reply });
+    if (typeof j.notes === "string") notes = j.notes;
+    busy = false; renderStatic(); speak(j.reply);
+    save();
+  }catch(e){
+    turns.pop(); busy = false; renderStatic();
+    if (!(e && e.name === "AbortError")) renderChat(bubble("note", t().offline));
+  }
+}
+
+// ---- archivio locale + email ai genitori ----
+function sessions(){ return store.json("stella.sessions", []); }
+function save(){
+  if (!sid) return;
+  const list = sessions().filter(s => s.id !== sid);
+  list.push({ id: sid, started, updated: Date.now(), lang, subject, photo: !!photo, notes,
+              turns: turns.map(x => ({ r: x.role === "user" ? "joy" : "stella", t: x.content.slice(0, 2000) })) });
+  while (list.length > 40) list.shift();
+  store.set("stella.sessions", JSON.stringify(list));
+}
+function two(n){ return (n < 10 ? "0" : "") + n; }
+function mailSession(useBeacon){
+  if (!sid || !turns.some(x => x.role === "assistant")) return;
+  const h = turns.length + ":" + turns[turns.length - 1].content.length;
+  if (h === sentHash) return;
+  const d = new Date(started);
+  const n = turns.filter(x => x.role === "user").length;
+  const subj = "[Frag Stella] Joy · " + two(d.getDate()) + "." + two(d.getMonth() + 1) + "." + d.getFullYear() + " · " + T.de.subjects[subject] + " · " + n + " domande";
+  const lines = ["Sessione con Stella — " + d.toLocaleString("it-CH") + " · " + T.de.subjects[subject] + " · " + (lang === "de" ? "tedesco" : "inglese") + (photo ? " · con foto del foglio" : ""), ""];
+  for (const x of turns) lines.push((x.role === "user" ? "JOY: " : "STELLA: ") + x.content, "");
+  if (notes) lines.push("APPUNTI DI STELLA (cosa sa Joy, strade provate, quanto era bloccata): " + notes, "");
+  lines.push("Dove si è fermata = guarda le domande di Joy; Stella non dà mai la soluzione.");
+  const fd = new FormData();
+  fd.append("email_from", "Frag Stella"); fd.append("email_to", MAIL.to); fd.append("website_form_signature", MAIL.signature);
+  fd.append("subject", subj); fd.append("description", lines.join("\n"));
+  let ok = false;
+  if (useBeacon && navigator.sendBeacon){ try{ ok = navigator.sendBeacon(MAIL.endpoint, fd); }catch(e){} }
+  if (!ok){ try{ fetch(MAIL.endpoint, { method: "POST", body: fd, mode: "no-cors", keepalive: true }).catch(() => {}); ok = true; }catch(e){} }
+  if (ok) sentHash = h;
+}
+document.addEventListener("visibilitychange", () => { if (document.visibilityState === "hidden") mailSession(true); });
+window.addEventListener("pagehide", () => mailSession(true));
+
+function showLog(){
+  $("gateBox").hidden = true; $("log").hidden = false;
+  const box = $("sessions"); box.textContent = "";
+  const list = sessions().sort((a, b) => b.updated - a.updated);
+  if (!list.length){ const p = document.createElement("p"); p.textContent = "Ancora nessuna sessione su questo telefono. Appena Joy chiede qualcosa a Stella, la trovate qui (e per email)."; box.append(p); return; }
+  for (const s of list){
+    const det = document.createElement("details");
+    const sum = document.createElement("summary");
+    const when = new Date(Number(s.started) || 0).toLocaleString("it-CH", { weekday: "short", day: "2-digit", month: "2-digit", hour: "2-digit", minute: "2-digit" });
+    const n = (s.turns || []).filter(x => x.r === "joy").length;
+    sum.textContent = `${when} · ${T.de.subjects[s.subject] || ""} · ${n} domande${s.photo ? " · con foto" : ""}`;
+    det.append(sum);
+    const tr = document.createElement("div"); tr.className = "tr";
+    if (s.notes){
+      const p = document.createElement("div"); p.style.color = "var(--soft)";
+      const b = document.createElement("b"); b.textContent = "Appunti di Stella: ";
+      p.append(b, document.createTextNode(String(s.notes))); tr.append(p);
+    }
+    for (const x of (s.turns || [])){
+      const p = document.createElement("div");
+      const b = document.createElement("b"); b.textContent = x.r === "joy" ? "Joy: " : "Stella: ";
+      p.append(b, document.createTextNode(String(x.t || "")));
+      tr.append(p);
+    }
+    det.append(tr); box.append(det);
+  }
+}
+
+// ---- collegamenti ----
+$("l-de").onclick = () => setLang("de");
+$("l-en").onclick = () => setLang("en");
+$("send").onclick = () => ask($("box").value);
+$("box").addEventListener("keydown", e => { if (e.key === "Enter" && !e.shiftKey){ e.preventDefault(); ask($("box").value); } });
+$("box").addEventListener("input", e => { e.target.style.height = "auto"; e.target.style.height = Math.min(140, e.target.scrollHeight) + "px"; });
+$("photo").onchange = async e => {
+  const f = e.target.files && e.target.files[0]; e.target.value = ""; if (!f) return;
+  try{
+    const p = await loadPhoto(f);
+    photo = { media_type: "image/jpeg", data: p.data };
+    $("thumb").src = p.dataUrl; $("thumb").hidden = false;
+  }catch(err){ photo = null; renderChat(bubble("note", t().badPhoto)); }
+  renderStatic();
+};
+$("newSheet").onclick = () => {
+  if (ctl) ctl.abort();
+  mailSession(false);
+  turns = []; notes = ""; sid = null; photo = null; $("thumb").hidden = true;
+  try{ speechSynthesis.cancel(); }catch(e){}
+  busy = false; renderStatic(); renderChat(bubble("note", t().newDone));
+};
+$("parents").onclick = () => { $("panel").hidden = false; $("gateBox").hidden = false; $("log").hidden = true; $("gate").value = ""; };
+$("gateGo").onclick = () => { if ($("gate").value.trim() === "91") showLog(); else $("gate").value = ""; };
+$("gate").addEventListener("keydown", e => { if (e.key === "Enter") $("gateGo").click(); });
+$("close1").onclick = $("close2").onclick = () => { $("panel").hidden = true; };
+
+renderStatic();
+})();
+</script>
+</body>
+</html>
