@@ -10,6 +10,7 @@
     { key: "secGram",   ids: ["grammar"], until: "2026-10-27" },   // grammar quiz (Mrs Wennek)
     { key: "secHerbst", ids: ["herbst"],  until: "2026-11-02" },   // Wörtchenprüfung «Herbst» (Herr Beric)
     { key: "secGeo",    ids: ["maps"],    until: "2026-10-20" },   // Geografie-Test (vorbei)
+    { key: "secWege",   ids: ["wegeplus", "wegeminus"], until: "2026-11-09" },   // Mathe-Test Plus/Minus bis 100 (Zahlenbuch S. 38-43)
     { key: "sec20",   ids: ["subitizing", "fives", "bonds", "addition", "subtraction"] },
     { key: "sec100",  ids: ["tens", "hundred", "neighbours", "numberline", "patterns", "wall", "triangle"] },
     { key: "secCalc", ids: ["plus100", "minus100", "complete", "always100", "double", "francs", "times", "compare"] },

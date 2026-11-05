@@ -106,7 +106,7 @@ function flush() {
  "js/games/tens.js", "js/games/hundred.js", "js/games/neighbours.js", "js/games/numberline.js", "js/games/patterns.js",
  "js/games/wall.js", "js/games/triangle.js",
  "js/games/plus100.js", "js/games/minus100.js", "js/games/complete.js", "js/games/always100.js", "js/games/double.js", "js/games/francs.js", "js/games/times.js", "js/games/compare.js",
- "js/games/diktat.js", "js/games/words.js", "js/games/diktatfull.js", "js/games/maps.js", "js/games/grammar.js", "js/games/herbst.js", "js/parent.js", "js/report.js", "js/app.js"
+ "js/games/diktat.js", "js/games/words.js", "js/games/diktatfull.js", "js/games/maps.js", "js/games/grammar.js", "js/games/herbst.js", "js/games/wege.js", "js/parent.js", "js/report.js", "js/app.js"
 ].forEach(function (f) { (new Function(fs.readFileSync(path.join(ROOT, f), "utf8")))(); });
 
 var spoken = [];
@@ -134,7 +134,7 @@ function lastGerman() { for (var i = spoken.length - 1; i >= 0; i--) if (spoken[
 var stats = { wrong: 0, rounds: 0, sessions: 0 };
 var LEVELS = { subitizing: 5, fives: 4, bonds: 4, addition: 5, subtraction: 5, tens: 5, hundred: 5, wall: 4, triangle: 4,
                patterns: 5, numberline: 5, neighbours: 4, plus100: 5, minus100: 5, complete: 5, always100: 5, double: 5, francs: 5, times: 5, compare: 5,
-               diktat: 5, words: 5, diktatfull: 5, maps: 5, grammar: 5, herbst: 5 };
+               diktat: 5, words: 5, diktatfull: 5, maps: 5, grammar: 5, herbst: 5, wegeplus: 5, wegeminus: 5 };
 var N_GAMES = Object.keys(LEVELS).length;
 
 function expectWrongFeedback(before, where) {
@@ -177,13 +177,21 @@ function drive(id, level) {
       else assert.ok(pr.querySelector(".mark").textContent === "⭐", where + ": riga leichte non marcata");
       continue;
     }
+    // 1aa) carte del Rechenweg (Plus-/Minus-Wege): ogni scelta è valida, poi si risolve a passi
+    var wcards = appNode.querySelectorAll(".way-card");
+    if (wcards.length) {
+      wcards[Math.floor(Math.random() * wcards.length)].click();
+      assert.ok(lastRound.answers && lastRound.answers.length >= 1 && /^w_/.test(lastRound.topic) && lastRound.topic !== "w_frei", where + ": Rechenweg senza passi");
+      assert.strictEqual(appNode.querySelectorAll(".way-card").length, 0, where + ": carte ancora visibili dopo la scelta");
+      continue;
+    }
     // 1b) tastierino numerico: prima un numero sbagliato, poi quello giusto.
     //     Round a più passi (Päckchen, tabelle): round.answers in ordine, avanzamento = celle .ok
     var np = appNode.querySelector(".numpad");
     if (np) {
       var solved = solvedCells(), multi = !!lastRound.answers;
       var ans = multi ? lastRound.answers[solved] : lastRound.ans;
-      assert.ok(typeof ans === "number" && ans >= 1 && ans <= 100, where + ": risposta fuori range " + ans);
+      assert.ok(typeof ans === "number" && ans >= 1 && ans <= 200, where + ": risposta fuori range " + ans);
       if (np !== lastNumpad || solved !== lastSolved) {
         typeNumpad(np, ans === 100 ? 99 : ans + 1);
         expectWrongFeedback(before, where);
@@ -309,6 +317,60 @@ function genChecks() {
         var vs = MM.herbst.variants(hw, 2);
         assert.ok(vs.length === 2 && vs[0] !== vs[1] && vs.indexOf(hw.w) < 0, "herbst variants " + hw.w + " " + vs);
       }
+      if (id === "wegeplus" || id === "wegeminus") {
+        var P = id === "wegeplus", f = function (a, b) { return P ? a + b : a - b; };
+        assert.strictEqual(r.kind, MM.wege.PLAN[(i % 6) % MM.wege.PLAN.length], "wege plan order");
+        assert.ok(r.q && r.q.length <= 48 && r.q.indexOf("undefined") < 0 && r.q.indexOf("NaN") < 0, "wege q " + r.q);
+        if (r.kind === "zehner") {
+          assert.strictEqual(r.tasks.length, 2, "wege zehner pair");
+          assert.strictEqual(r.tasks.filter(function (k) { return k.cross; }).length, 1, "wege zehner: genau eine mit Übergang " + r.q);
+          r.tasks.forEach(function (k, j) {
+            assert.strictEqual(k.ans, f(k.a, k.b), "wege zehner ans");
+            assert.ok(k.z >= 1 && k.z <= 9 && k.ans >= 11 && k.ans <= 99 && k.b >= 1 && k.b <= 9, "wege zehner range " + r.q);
+            assert.strictEqual(k.cross, P ? (k.a % 10) + k.b >= 10 : (k.a % 10) < k.b, "wege zehner cross " + r.q);
+            assert.strictEqual(r.answers[2 * j], k.z); assert.strictEqual(r.answers[2 * j + 1], k.ans);
+          });
+        } else if (r.kind === "tripel") {
+          assert.strictEqual(r.rows.length, 3, "wege tripel rows");
+          r.rows.forEach(function (w, j) {
+            assert.strictEqual(w.ans, f(r.a, w.b), "wege tripel ans"); assert.strictEqual(r.answers[j], w.ans);
+            assert.ok(w.ans >= 1 && w.ans <= 140 && w.b >= 1, "wege tripel range " + r.q);
+          });
+          assert.strictEqual(r.rows[2].b, r.z + r.e, "wege tripel: die dritte ist beides");
+          if (!P || L === 1) r.rows.forEach(function (w) { assert.ok(w.ans <= 99, "wege tripel bis 100 " + r.q); });
+        } else if (r.kind === "leicht") {
+          assert.ok(r.rows.length === (L >= 3 ? 4 : 3) && r.order.length === r.rows.length && r.easyIdx === r.order[0], "wege leicht rows");
+          assert.strictEqual(r.rows[r.easyIdx].b % 10, 0, "wege leicht: die leichte ist ein glatter Zehner");
+          assert.strictEqual(r.rows.filter(function (w) { return w.b % 10 === 0; }).length, 1, "wege leicht: nur eine glatte " + r.q);
+          assert.strictEqual(new Set(r.rows.map(function (w) { return w.b; })).size, r.rows.length, "wege leicht distinct " + r.q);
+          r.rows.forEach(function (w) {
+            assert.strictEqual(w.ans, f(w.a, w.b), "wege leicht ans"); assert.ok(w.ans >= 1 && w.ans <= 99 && w.b >= 1, "wege leicht range " + r.q);
+            if (w.ref !== null) assert.ok(r.rows.some(function (x) { return x.b === w.ref; }), "wege leicht ref im Päckchen " + r.q);
+          });
+          r.order.forEach(function (ix, k) { assert.strictEqual(r.answers[k], r.rows[ix].ans, "wege leicht answers order"); });
+        } else {
+          assert.strictEqual(r.ans, f(r.a, r.b), "wege weg ans");
+          assert.ok(r.ans >= 11 && r.ans <= 99 && r.a >= 11 && r.b >= 11 && r.a <= 99 && r.b <= 99, "wege weg range " + r.q);
+          assert.strictEqual(r.cross, P ? (r.a % 10) + (r.b % 10) >= 10 : (r.a % 10) < (r.b % 10), "wege weg cross flag " + r.q);
+          if ((i % 6) % 5 === 4) assert.ok(r.cross, "wege: 5. Runde mit Übergang");
+          if ((i % 6) % 5 === 3 && L <= 2) assert.ok(!r.cross, "wege: 4. Runde ohne Übergang");
+          var wys = MM.wege.waysFor(r, L);
+          assert.ok(wys.length >= 2 && wys.indexOf("schritt") >= 0 && wys.indexOf("bild") >= 0, "wege ways " + wys);
+          assert.strictEqual(wys.indexOf("kopf") >= 0, L >= 4, "wege: im Kopf erst ab Stufe 4");
+          wys.forEach(function (w) {
+            var st = MM.wege.steps(r, w);
+            assert.ok(st.length >= 1 && st.length <= 3, "wege steps " + w);
+            assert.strictEqual(st[st.length - 1].ans, r.ans, "wege " + w + " endet beim Ergebnis " + r.q);
+            st.forEach(function (s) {
+              assert.ok(s.ans >= 1 && s.ans <= 109 && s.ans === Math.floor(s.ans), "wege step range " + w + " " + r.q + " → " + s.ans);
+              assert.ok(s.hint && s.hint.length > 8 && s.hint.indexOf("{") < 0, "wege hint " + w + ": " + s.hint);
+              var pp = s.parts;   // jede Zeile ist eine richtige kleine Rechnung
+              assert.strictEqual(pp[1] === "+" ? pp[0] + pp[2] : pp[0] - pp[2], s.ans, "wege step calc " + w + ": " + pp.join(" "));
+              assert.ok(pp[0] >= 1 && pp[2] >= 1, "wege step operands " + w + ": " + pp.join(" "));
+            });
+          });
+        }
+      }
       assert.ok(r && typeof r === "object", id + " makeRound");
       if (id === "wall") { assert.ok(r.steps.length > 0 && r.steps.length === Object.keys(r.hidden).length, "wall steps"); assert.ok(r.rows[r.rows.length - 1][0] <= 100, "wall top"); }
       if (id === "triangle") assert.strictEqual(r.steps.length, Object.keys(r.hidden).length, "triangle steps");
@@ -356,7 +418,7 @@ function genChecks() {
 /* ---------- esegui ---------- */
 var t0 = Date.now();
 assert.strictEqual(appNode.querySelectorAll(".game-card").length, N_GAMES, N_GAMES + " carte in home");
-assert.strictEqual(appNode.querySelectorAll(".section-label").length, 7, "7 sezioni in home");
+assert.strictEqual(appNode.querySelectorAll(".section-label").length, 8, "8 sezioni in home");
 genChecks();
 var LV = LEVELS;
 ["de", "en"].forEach(function (lang) {

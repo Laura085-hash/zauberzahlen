@@ -19,7 +19,10 @@
     build: "legen", bundle: "bündeln", pair: "Nachbarn", between: "dazwischen", board: "Hundertertafel", find: "finden",
     shape: "Formen", num: "Zahlenfolge", grow: "wachsen", split: "zerlegen", takeaway: "wegnehmen", difference: "Unterschied",
     inverse: "umgekehrt", pack: "Päckchen", easy: "leichteste zuerst", table: "Tabelle", story: "Geschichte", fill: "füllen",
-    together: "zusammen", reverse: "andersrum", halfTogether: "halb & zusammen"
+    together: "zusammen", reverse: "andersrum", halfTogether: "halb & zusammen",
+    zehner: "neuer Zehner / Zehner anknabbern", tripel: "Zehner · Einer · beides", leicht: "leichte Aufgabe zuerst", w_frei: "Rechenweg",
+    w_schritt: "Weg: Schritt für Schritt", w_stellen: "Weg: Zehner und Einer extra", w_rund: "Weg: runde Zahl, dann zurück",
+    w_tausch: "Weg: leichter machen", w_bild: "Weg: mit Bild", w_kopf: "Weg: im Kopf"
   };
   function two(n) { return (n < 10 ? "0" : "") + n; }
   function dayOf(sec) { var d = new Date(sec * 1000); return d.getFullYear() + "-" + two(d.getMonth() + 1) + "-" + two(d.getDate()); }
@@ -101,7 +104,7 @@
 
   function quote(s) { return "“" + s + "”"; }
   function errorLine(id, e) {
-    var what = e.w.length ? (isWordGame(id) ? "ha scritto " : "ha scelto ") + e.w.map(quote).join(", ") : "sbagliato";
+    var what = e.w.length ? (isWordGame(id) || /^wege/.test(id) ? "ha scritto " : "ha scelto ") + e.w.map(quote).join(", ") : "sbagliato";
     return "  " + nameOf(id) + ": " + (e.q || "?") + (e.k ? " (" + topicLabel(e.k) + ")" : "") + " → " + what + " (poi giusto)";
   }
 
@@ -120,6 +123,15 @@
         s += g.level > g.lvlFrom ? " · livello " + g.lvlFrom + " → " + g.level + " ⬆" : " · livello " + g.level;
         lines.push(s);
       });
+      // Plus-/Minus-Wege: quale Rechenweg sceglie Joy e con quale riesce al primo colpo
+      var wayLines = [];
+      r.games.forEach(function (g) {
+        var parts = Object.keys(g.topics).filter(function (k) { return /^w_/.test(k) && k !== "w_frei"; })
+          .sort(function (x, y) { return g.topics[y].n - g.topics[x].n; })
+          .map(function (k) { return topicLabel(k).replace(/^Weg: /, "") + " " + g.topics[k].n + "× (" + g.topics[k].ok + " al 1° colpo)"; });
+        if (parts.length) wayLines.push("  " + nameOf(g.id) + ": " + parts.join(" · "));
+      });
+      if (wayLines.length) { lines.push("Rechenweg scelto da Joy:"); wayLines.forEach(function (l) { lines.push(l); }); }
       var errs = [];
       r.games.forEach(function (g) { g.errors.forEach(function (e) { errs.push(errorLine(g.id, e)); }); });
       lines.push("Errori di oggi" + (errs.length ? ":" : ": nessuno 🎉"));
