@@ -318,6 +318,7 @@
       testVoice: "Anhören",
 
       parent: "Für Eltern",
+      sheets: "Arbeitsblätter",
       parentGate: "Tippe die {n}",
       parentIntro: "Lernfortschritt",
       colSkill: "Fähigkeit",
@@ -667,6 +668,7 @@
       testVoice: "Listen",
 
       parent: "For parents",
+      sheets: "Worksheets",
       parentGate: "Tap the {n}",
       parentIntro: "Learning progress",
       colSkill: "Skill",

@@ -1,0 +1,58 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="robots" content="noindex, nofollow">
+<title>Arbeitsblätter</title>
+<!-- I fogli di ripasso per Joy (solo le sue pagine: la pagina con le soluzioni per i genitori NON è qui).
+     Immagini e non PDF: il Browser di Samsung Kids (WebView) non apre i PDF. -->
+<style>
+:root{--ink:#2a1a4a;--card:#fff;--bg1:#6a4bb6;--bg2:#d9467f}
+*{box-sizing:border-box}
+body{margin:0;font-family:"Comic Sans MS","Trebuchet MS",system-ui,sans-serif;color:var(--ink);
+  background:linear-gradient(160deg,var(--bg1),var(--bg2)) fixed;padding:12px max(12px,env(safe-area-inset-right,0px)) 24px max(12px,env(safe-area-inset-left,0px))}
+.top{display:flex;align-items:center;gap:10px;margin-bottom:10px}
+.top a{flex:none;width:48px;height:48px;border-radius:50%;background:rgba(255,255,255,.25);color:#fff;font-size:24px;
+  display:flex;align-items:center;justify-content:center;text-decoration:none}
+h1{color:#fff;margin:0;font-size:1.6rem}
+.list{display:flex;flex-direction:column;gap:10px;max-width:720px;margin:0 auto}
+.list button{display:flex;gap:12px;align-items:center;text-align:left;border:0;border-radius:18px;background:var(--card);
+  padding:14px 16px;font:inherit;font-size:1.1rem;font-weight:700;color:var(--ink);box-shadow:0 4px 12px rgba(0,0,0,.15)}
+.list button span{font-size:1.8rem}
+.list small{display:block;font-weight:400;font-size:.85rem;opacity:.75}
+.sheet{max-width:900px;margin:0 auto;display:flex;flex-direction:column;gap:12px}
+.sheet img{width:100%;height:auto;background:#fff;border-radius:8px;box-shadow:0 4px 12px rgba(0,0,0,.2)}
+[hidden]{display:none!important}
+</style>
+</head>
+<body>
+<div class="top"><a id="back" href="./" aria-label="Zurück">←</a><h1 id="title">📄 Arbeitsblätter</h1></div>
+<div class="list" id="list">
+  <button data-n="1"><span>🛤️</span><div>Blatt 1 · Plus-Rechenwege<small>Zahlenbuch S. 38</small></div></button>
+  <button data-n="2"><span>✨</span><div>Blatt 2 · Plus: neuer Zehner<small>Zahlenbuch S. 39</small></div></button>
+  <button data-n="3"><span>🐭</span><div>Blatt 3 · Minus-Rechenwege<small>Zahlenbuch S. 42</small></div></button>
+  <button data-n="4"><span>🧀</span><div>Blatt 4 · Minus: Zehner anknabbern<small>Zahlenbuch S. 43</small></div></button>
+</div>
+<div class="sheet" id="sheet" hidden></div>
+<script>
+const list = document.getElementById("list"), sheet = document.getElementById("sheet"),
+      back = document.getElementById("back"), title = document.getElementById("title");
+let open = 0;
+function show(n){
+  open = n;
+  list.hidden = !!n; sheet.hidden = !n;
+  sheet.textContent = "";
+  if (n){
+    for (const p of [1, 2]){
+      const img = new Image(); img.src = "blaetter/blatt" + n + "-" + p + ".jpg"; img.alt = "Blatt " + n + " Seite " + p;
+      sheet.append(img);
+    }
+    title.textContent = "📄 Blatt " + n; window.scrollTo(0, 0);
+  } else title.textContent = "📄 Arbeitsblätter";
+}
+list.addEventListener("click", e => { const b = e.target.closest("button"); if (b) show(Number(b.dataset.n)); });
+back.addEventListener("click", e => { if (open){ e.preventDefault(); show(0); } });   // dal foglio torna all'elenco, dall'elenco ai giochi
+</script>
+</body>
+</html>

@@ -120,6 +120,10 @@
 
     // accesso genitori (discreto)
     var actions = ui.el("div", { class: "home-actions" });
+    // i fogli di ripasso da guardare sul telefono (blaetter.html: solo le pagine di Joy, niente soluzioni)
+    var sheetsBtn = ui.el("button", { class: "btn btn-ghost" }, ["📄 " + t("sheets")]);
+    sheetsBtn.addEventListener("click", function () { MM.audio.sfx("tap"); window.location.href = "blaetter.html"; });
+    actions.appendChild(sheetsBtn);
     var parentBtn = ui.el("button", { class: "btn btn-ghost" }, ["📊 " + t("parent")]);
     parentBtn.addEventListener("click", function () { MM.audio.sfx("tap"); openParentGate(); });
     actions.appendChild(parentBtn);
